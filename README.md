@@ -7,7 +7,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs
 # TO-DOs
 
 - [ ] Terminal
-- [ ] Console
+- [x] Console
 - [ ] Save Instance
 - [ ] Remote Spy
 - [ ] Explorer
