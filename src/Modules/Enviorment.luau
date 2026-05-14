@@ -28,7 +28,7 @@ __index = function(t,k)
 	
 	return rawget(t,k) or module_hidden[k]
 end})
-module.ExecutorSupport = require(script.Parent.ExecutorSupport)
+
 module.Version = "1.0.0"
 -- Enviorment Functions
 module.Functions = {}
