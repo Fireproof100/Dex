@@ -2,7 +2,7 @@
 
 **Loadstring**
 ```lua
-loadstring(game:HttpGet("https://github.com/Fireproof100/Dex/blob/main/out.luau"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs/heads/main/out.luau"))()
 ```
 # TO-DOs
 
