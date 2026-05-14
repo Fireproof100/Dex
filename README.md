@@ -15,7 +15,9 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs
 - [ ] Remote Spy
 - [ ] Explorer
   - [x] Call Function
-  - [x] Save Instance 
+  - [x] Save Instance
+  - [ ] Selection Box
+  - [ ] Better Search
   - [ ] Search filters and autofill
   - [x] Rewrite
 - [ ] Properties
