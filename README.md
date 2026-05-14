@@ -5,7 +5,10 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs/heads/main/out.luau"))()
 ```
 # TO-DOs
-
+- [ ] Replace every old icon with a new one (since they got replaced by roblox and everything looks weird)
+   - [ ] Explorer
+       - [ ] Right Click Context
+       - [ ] Insert Object Context
 - [ ] Terminal
 - [x] Console
 - [ ] Save Instance
@@ -24,6 +27,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs
   - [ ] Info Bar
   - [x] Tabs 
 - [ ] Click to Select
-- [ ] Binary SaveInstance Module
+- [ ] Binary SaveInstance Module 
 - [ ] 3D Model Viewer
 - [ ] Plugin API
