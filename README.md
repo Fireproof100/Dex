@@ -11,7 +11,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs
        - [ ] Insert Object Context
 - [ ] Terminal
 - [x] Console
-- [ ] Save Instance
+- [ ] Save Instance Menu
 - [ ] Remote Spy
 - [ ] Explorer
   - [x] Call Function
@@ -27,8 +27,10 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs
 - [ ] Script Viewer
   - [ ] Autofill
   - [ ] Info Bar
+  - [ ] Dump Functions
   - [x] Tabs 
 - [ ] Click to Select
 - [ ] Binary SaveInstance Module 
 - [ ] 3D Model Viewer
+- [ ] Settings
 - [ ] Plugin API
