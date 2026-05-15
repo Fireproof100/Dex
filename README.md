@@ -19,11 +19,13 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs
   - [ ] Selection Box
   - [ ] Better Search
   - [ ] Search filters and autofill
+  - [ ] Working shortcuts
   - [x] Rewrite
 - [ ] Properties
   - [ ] Tag Editor
   - [ ] Copy Value
   - [x] Rewrite
+  - [ ] Working shortcuts
 - [ ] Script Viewer
   - [ ] Autofill
   - [ ] Info Bar
