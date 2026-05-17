@@ -22,7 +22,7 @@ module.InitInsertObject = function(node_list)
 		TextColor =  Enviorment.Settings.Theme.Text,
 		HighlightColor =  Enviorment.Settings.Theme.ButtonHover
 	})
-
+	context.Iconless = true
 	local classes = {}
 	for i,class in Enviorment.API.Classes do
 		local tags = class.Tags
@@ -82,6 +82,7 @@ module.InitCallFunction = function(Explorer)
 	local context = Explorer.CallFunctionContext
 	if context == nil then
 		context = ContextMenu.new()
+		context.Iconless = true
 		context.SearchEnabled = true
 		context.MaxHeight = 400
 		context.Width = 325
@@ -491,41 +492,7 @@ module.CreateNode = function(Explorer,index)
 	local Update = nil
 	local OldValue = nil
 	local TempConnections = {}
-	local ValueChanged = function(node)
-		if node == nil then
-			for _, v in TempConnections do v:Disconnect() end;return
-		end
-		if node.Instance == nil then
-			for _, v in TempConnections do v:Disconnect() end;return
-		end
-		for _, v in TempConnections do v:Disconnect() end;
-		--task.wait(1)
-		TempConnections["ChildAdded"] = node.Instance.ChildAdded:Connect(function()
-			--warn("fired1")
-			if node.Expanded then 
-				Explorer.ExpandNode(node,true)
-				--Explorer.Refresh() 
-			end
-			if Explorer.Searching and Enviorment.Settings.Explorer.AutoUpdateSearch then
-				Explorer.StartSearch(Explorer.SearchText)
-			end
-		end)
-		local debounce = false
-		TempConnections["Destroying"] = node.Instance.AncestryChanged:Connect(function()
-			node.RemoveOnSight = true
-			Update()
-			Explorer.GetAtIndex(index)
-			Explorer.Refresh(true)
-		end)
-		TempConnections["Destroying2"] = node.Instance.Changed:Connect(function(p)
-			if p ~= "Parent" then return end
-			node.RemoveOnSight = true
-			Update()
-			Explorer.GetAtIndex(index)
-			Explorer.Refresh(true)
-		end)
-		--warn("Connected")
-	end
+	
 	module.ExpandHighlight(new.Indent.Expand)
 	Update = function()
 		new.Position = UDim2.new(0,0,0,(index - 1) * 20)
@@ -548,15 +515,17 @@ module.CreateNode = function(Explorer,index)
 		end
 		if node.Indent then
 			local indent = node.Indent
-			if Explorer.GetIndentIncrement(node) ~= 0 then
-				indent = indent + Explorer.GetIndentIncrement(node)
+			local indent2 = Explorer.GetIndentIncrement(node) 
+			if indent2 ~= 0 then
+				indent = indent + indent2
 			end
 			new.Indent.Position = UDim2.new(0,(info.Explorer_IndentSeparation * indent) - Explorer.XOffset,0,0) -- 18
 			new:SetAttribute("XOffset",(info.Explorer_IndentSeparation * indent))
 		elseif node.Instance then
 			local indent = #Functions.GetAncestors(node.Instance)
-			if Explorer.GetIndentIncrement(node) ~= 0 then
-				indent = indent + Explorer.GetIndentIncrement(node)
+			local i2 =  Explorer.GetIndentIncrement(node)
+			if i ~= 0 then
+				indent = indent + i2
 			end
 			new.Indent.Position = UDim2.new(0,(info.Explorer_IndentSeparation * indent) - Explorer.XOffset ,0,0)
 			new:SetAttribute("XOffset",(info.Explorer_IndentSeparation * indent))
@@ -564,10 +533,7 @@ module.CreateNode = function(Explorer,index)
 			-- TODO
 		end
 		
-		if OldValue ~= node.Instance then
-			task.spawn(ValueChanged,node)
-			OldValue = node.Instance
-		end
+		
 		--if node.Highlighted then
 		--	new.BackgroundColor3 = Enviorment.Settings.Theme.Highlight
 		--	new.BackgroundTransparency = node.Selected ~= true and 0 or 1
@@ -661,6 +627,41 @@ module.CreateNode = function(Explorer,index)
 			new.Indent.Icon.Image = Functions.GetIcon(node.Instance.ClassName)
 			--new.Indent.Icon.Size = UDim2.new(1,0,1,0)
 			--new.Indent.Icon.Position = UDim2.new(0,0,0,0)
+		end
+		if OldValue ~= node.Instance then
+			if node == nil then
+				for _, v in TempConnections do v:Disconnect() end;return
+			end
+			if node.Instance == nil then
+				for _, v in TempConnections do v:Disconnect() end;return
+			end
+			for _, v in TempConnections do v:Disconnect() end;
+			--task.wait(1)
+			TempConnections["ChildAdded"] = node.Instance.ChildAdded:Connect(function()
+				--warn("fired1")
+				if node.Expanded then 
+					Explorer.ExpandNode(node,true)
+					--Explorer.Refresh() 
+				end
+				if Explorer.Searching and Enviorment.Settings.Explorer.AutoUpdateSearch then
+					Explorer.StartSearch(Explorer.SearchText)
+				end
+			end)
+			local debounce = false
+			TempConnections["Destroying"] = node.Instance.AncestryChanged:Connect(function()
+				node.RemoveOnSight = true
+				Update()
+				Explorer.GetAtIndex(index)
+				Explorer.Refresh(true)
+			end)
+			TempConnections["Destroying2"] = node.Instance.Changed:Connect(function(p)
+				if p ~= "Parent" then return end
+				node.RemoveOnSight = true
+				Update()
+				Explorer.GetAtIndex(index)
+				Explorer.Refresh(true)
+			end)
+			OldValue = node.Instance
 		end
 		
 	end
@@ -1384,6 +1385,18 @@ module.NewExplorer = function()
 			local n = Explorer.GetNodesInRange()
 			return #n
 		end,
+		GetLenght = function()
+			local x = 0
+			local function OnNode(node)
+				if node == nil then return end
+				x += 1
+				if node.Expanded and node.Subnodes then
+					for _, v in node.Subnodes do OnNode(v) end
+				end
+			end
+			for _, v in Explorer.Nodes do OnNode(v) end
+			return x
+		end,
 		GetNodeFromInstance = function(obj)
 			for _,node in Explorer.GetNodes() do
 				if node.Instance == obj then return node end
@@ -1517,6 +1530,9 @@ module.NewExplorer = function()
 			context:Show()
 		end,
 		ViewObject = function(inst)
+			if Explorer.IsObjectVisible(inst) then
+				--return
+			end
 			local ancestors = Functions.GetAncestors(inst)
 			ancestors = Functions.ReverseTable(ancestors)
 			for _, inst2 in ancestors do
@@ -1541,7 +1557,28 @@ module.NewExplorer = function()
 				Explorer.ScrollY.Index = index - 2
 				Explorer.ScrollY:Update()
 			end
+			for _, v in Explorer.GetNodes() do
+				if v == nil then
+					continue
+				end
+				
+				if v == node then
+					continue
+				end
+				v.Selected = false
+			end
 			Explorer.Refresh()
+		end,
+		IsNodeVisible = function(node)
+			if node == nil then return false end
+			local index = Explorer.GetNodeIndex(node)
+			if index == nil then return false end
+			return index >= Explorer.ScrollY.Index and index <= Explorer.ScrollY.Index + Explorer.ScrollY.VisibleSpace
+		end,
+		IsObjectVisible = function(obj : Instance)
+			local node = Explorer.GetNodeFromInstance(obj)
+			if node == nil then return false end
+			return Explorer.IsNodeVisible(node)
 		end,
 	}
 	Explorer.NodeContainer = Explorer.Window.GuiElems.Content:Clone()
@@ -1701,12 +1738,17 @@ module.NewExplorer = function()
 	Explorer.NilInstancesFolder.Name = table.pack(Enviorment.Functions.getnilinstances())[2] == true and "Nil Instances" or "Nil Instances [Not Supported]"
 	
 	SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-		if SearchBox.Text ~= "" then
-			Explorer.StartSearch(SearchBox.Text)
-		else
+		if SearchBox.Text == "" then
 			Explorer.StopSearch()
 		end
 		
+	end)
+	SearchBox.FocusLost:Connect(function(pressed : boolean)
+		if pressed then
+			Explorer.StopSearch()
+			task.wait()
+			Explorer.StartSearch(SearchBox.Text)
+		end
 	end)
 	
 	local function AddTopObject(obj)
@@ -1773,7 +1815,7 @@ module.NewExplorer = function()
 	end)
 	
 	--- ScrollBar
-	workspace:SetAttribute("YOffset",0)
+	--workspace:SetAttribute("YOffset",0)
 	local explorerScroll = ScrollBar.new()
 	local explorerScrollH = ScrollBar.new(true)
 	
@@ -1808,6 +1850,11 @@ module.NewExplorer = function()
 	explorerScrollH.Gui.Position = UDim2.new(0,0,1,-16)
 	explorerScrollH.Gui.Size = UDim2.new(1,-16,0,16)
 	task.spawn(function()
+		while task.wait(5) do
+			explorerScroll.TotalSpace = Explorer.GetLenght()
+		end
+	end)
+	task.spawn(function()
 		local old = 0
 		local old2 = 0
 		while task.wait() do
@@ -1829,15 +1876,17 @@ module.NewExplorer = function()
 			end
 
 			local NodeWidth = highest
-			explorerScroll.TotalSpace = Explorer.GetMaxIndex() --* info.Explorer_IndentSeparation
+			 --* info.Explorer_IndentSeparation
 			if explorerScroll.Index ~= old then
 				Explorer.YOffset = explorerScroll.Index
 				old = explorerScroll.Index
+				explorerScroll.TotalSpace = Explorer.GetLenght()
 				Explorer.Refresh(true)
 			end
 			if explorerScrollH.Index ~= old2 then
 				Explorer.XOffset = explorerScrollH.Index
 				old2 = explorerScrollH.Index
+				explorerScroll.TotalSpace = Explorer.GetLenght()
 				Explorer.Refresh(true)
 			end
 
@@ -1892,15 +1941,11 @@ module.NewExplorer = function()
 	module.InitInsertObject(Explorer)
 	local clipboard = Explorer.clipboard
 	context = context.new()
+	context.Iconless = true
 	Explorer.ContextMenu = context
 	Explorer.Context = context
-	context:Register("CUT", {
-		Name = "Cut",
-		IconMap = module.MiscIcons,
-		Icon = "Cut",
-		DisabledIcon = "Cut_Disabled",
-		Shortcut = "Ctrl+Z",
-		OnClick = function()
+	local ContextFunctions = {
+		Cut = function()
 			table.clear(Explorer.clipboard)
 			for _, inst in Explorer.selection.List do
 				pcall(function()
@@ -1913,15 +1958,7 @@ module.NewExplorer = function()
 
 			end
 		end,
-	})
-
-	context:Register("COPY", {
-		Name = "Copy",
-		IconMap = module.MiscIcons,
-		Icon = "Copy",
-		DisabledIcon = "Copy_Disabled",
-		Shortcut = "Ctrl+C",
-		OnClick = function()
+		Copy = function()
 			table.clear(Explorer.clipboard)
 			for _, inst in Explorer.selection.List do
 				pcall(function()
@@ -1929,68 +1966,29 @@ module.NewExplorer = function()
 				end)
 			end
 		end,
-	})
-
-	context:Register("PASTE", {
-		Name = "Paste Into",
-		IconMap = module.MiscIcons,
-		Icon = "Paste",
-		DisabledIcon = "Paste_Disabled",
-		Shortcut = "Ctrl+Shift+V",
-		OnClick = function()
+		Paste = function()
 
 			for _,inst in Explorer.clipboard do
 				inst.Parent = Explorer.selection.List[1]
 			end
 			--n--ode_list.ViewObject(Explorer.selection.List[1])
 		end,
-	})
-
-	context:Register("DUPLICATE", {
-		Name = "Duplicate",
-		IconMap = module.MiscIcons,
-		Icon = "Copy",
-		DisabledIcon = "Copy_Disabled",
-		Shortcut = "Ctrl+D",
-		OnClick = function()
+		
+		Duplicate = function()
 			for _, inst in Explorer.selection.List do
 				pcall(function() inst:Clone().Parent = inst.Parent end)
 			end
 		end,
-	})
-
-	context:Register("DELETE", {
-		Name = "Delete",
-		IconMap = module.MiscIcons,
-		Icon = "Delete",
-		DisabledIcon = "Delete_Disabled",
-		Shortcut = "Del",
-		OnClick = function()
+		Delete = function()
 			for _, inst in Explorer.selection.List do
 				pcall(game.Destroy,inst)
 			end
 		end,
-	})
-
-	context:Register("RENAME", {
-		Name = "Rename",
-		IconMap = module.MiscIcons,
-		Icon = "Rename",
-		DisabledIcon = "Rename_Disabled",
-		Shortcut = "F2",
-		OnClick = function()
+		
+		Rename = function()
 			Explorer.SetRenaming(Explorer.GetNodeFromInstance(Explorer.selection.List[1]))
-			
 		end,
-	})
-
-	context:Register("GROUP", {
-		Name = "Group",
-		IconMap = module.MiscIcons,
-		Icon = "Group",
-		DisabledIcon = "Group_Disabled",
-		Shortcut = "Ctrl+G",
-		OnClick = function()
+		Group = function()
 			local sList = Explorer.selection.List
 			if #sList == 0 then
 				return
@@ -2007,17 +2005,8 @@ module.NewExplorer = function()
 				repeat task.wait(0.1) until Explorer.GetNodeFromInstance(model) ~= nil
 				Explorer.SelectNode(Explorer.GetNodeFromInstance(model),true,true)
 			end)
-
 		end,
-	})
-
-	context:Register("UNGROUP", {
-		Name = "Ungroup",
-		IconMap = module.MiscIcons,
-		Icon = "Ungroup",
-		DisabledIcon = "Ungroup_Disabled",
-		Shortcut = "Ctrl+U",
-		OnClick = function()
+		Ungroup = function()
 			local newSelection = {}
 			for _,inst in Explorer.selection.List do
 				for _, v in inst:GetChildren() do
@@ -2033,17 +2022,8 @@ module.NewExplorer = function()
 			for _, inst in newSelection do
 				Explorer.SelectNode(Explorer.GetNodeFromInstance(inst),true,false)
 			end
-
 		end,
-	})
-
-	context:Register("SELECT_CHILDREN", {
-		Name = "Select Children",
-		IconMap = module.MiscIcons,
-		Icon = "SelectChildren",
-		DisabledIcon = "SelectChildren_Disabled",
-		OnClick = function()
-			--for _,node in Explorer.GetNodes() do if node == nil then continue end;node.Selected = false end
+		Select_Children = function()
 			local newSelection = {}
 			local oldSelection = {}
 			for _, inst in Explorer.selection.List do
@@ -2051,7 +2031,7 @@ module.NewExplorer = function()
 				if node == nil then
 					continue
 				end
-				
+
 				local firstIndex = Explorer.GetNodeIndex(node)
 				local secondNode = node
 				local secondIndex = 0
@@ -2084,13 +2064,7 @@ module.NewExplorer = function()
 			end
 			Explorer.Refresh()
 		end,
-	})
-	context:Register("SELECT_DESCENDANTS", {
-		Name = "Select Descendants",
-		IconMap = module.MiscIcons,
-		Icon = "SelectChildren",
-		DisabledIcon = "SelectChildren_Disabled",
-		OnClick = function()
+		Select_Descendants = function()
 			for _, inst in Explorer.selection.List do
 				local node = Explorer.GetNodeFromInstance(inst)
 				if node == nil then
@@ -2125,12 +2099,7 @@ module.NewExplorer = function()
 			end
 			Explorer.Refresh()
 		end,
-	})
-	context:Register("JUMP_TO_PARENT", {
-		Name = "Jump to Parent",
-		IconMap = module.MiscIcons,
-		Icon = "JumpToParent",
-		OnClick = function()
+		Jump_To_Parent = function()
 			local newSelection = {}
 			local oldSelection = {}
 			for _,inst in Explorer.selection.List do
@@ -2147,57 +2116,30 @@ module.NewExplorer = function()
 				node.Selected = false
 			end
 		end,
-	})
-
-	context:Register("TELEPORT_TO", {
-		Name = "Teleport To",
-		IconMap = module.MiscIcons,
-		Icon = "TeleportTo",
-		OnClick = function()
+		TeleportTo = function()
 			pcall(function()
 				Enviorment.LocalPlayer.Character.PrimaryPart:PivotTo(Explorer.selection.List[1]:GetPivot())
 			end)
-		end,
-	})
-
-	context:Register("EXPAND_ALL", {
-		Name = "Expand All",
-		OnClick = function()
-			warn("___")
+		end,	
+		ExpandAll = function()
 			for _, inst in Explorer.selection.List do
-				warn("s",inst)
 				local node = Explorer.GetNodeFromInstance(inst)
-				warn("?",node)
 				Explorer.ExpandAll(node)
-				warn("n",inst)
 			end
-			warn("!")
 			Explorer.Refresh()
-		end,
-	})
-
-	context:Register("COLLAPSE_ALL", {
-		Name = "Collapse All",
-		OnClick = function()
+		end,	
+		CollapseAll = function()
 			for _, inst in Explorer.selection.List do
 				Explorer.CollapseAll(Explorer.GetNodeFromInstance(inst))
 			end
-		end,
-	})
-
-	context:Register("CLEAR_SEARCH_AND_JUMP_TO", {
-		Name = "Clear Search and Jump to",
-		OnClick = function()
+		end,	
+		Clear_Search_And_Jump_To = function()
 			local inst = Explorer.selection.List[1]
 			SearchBox.Text = "";
 			task.wait(0.1)
 			Explorer.ViewObject(inst)
 		end,
-	})
-
-	context:Register("COPY_PATH", {
-		Name = "Copy Path",
-		OnClick = function()
+		CopyPath = function()
 			local path = ""
 			if #Explorer.selection.List > 1 then
 				path = path .. "{"
@@ -2212,6 +2154,246 @@ module.NewExplorer = function()
 			end
 			Enviorment.Functions.setclipboard(path)
 		end,
+		InsertObject = function()
+			local mouse = Enviorment.LocalPlayer:GetMouse()
+			local x = module.LastX or mouse.X
+			local y = module.LastY or mouse.Y
+			Explorer.InsertObjectContext:Show(x, y)
+		end,
+		CallFunction = function()
+			module.InitCallFunction(Explorer)
+			local mouse = Enviorment.LocalPlayer:GetMouse()
+			Explorer.CallFunctionContext:Show(module.LastX or mouse.X,module.LastY or mouse.Y)
+		end,
+		SaveToFile = function()
+			local passed = false
+			module.SaveInstance:Show()
+			module.SaveInstance:SetText(game.Name .. "rbxl")
+
+			module.SaveInstance.OnSave:Connect(function(text)
+				if passed then return end
+				passed = true
+				Enviorment.Functions.saveinstance({
+					SafeMode = false,
+					SaveBytecode = true,
+					ExtraInstances = table.clone(Explorer.selection.List),
+					mode = "invalid",
+					__DEBUG_MODE = true,
+					FileName = text,
+					FilePath = text,
+				})
+
+			end)
+			module.SaveInstance.OnCancel:Connect(function()
+				if passed then return end
+				passed = true
+			end)
+		end,	
+		ViewObject = function()
+			local sList = selection.List
+
+			for i = 1, #sList do
+				local node = sList[i]
+
+				if node.Obj:IsA("BasePart") or node.Obj:IsA("Model") then
+					ObjectViewer.ViewObject(node.Obj)
+				end
+			end
+		end,	
+		ViewScript = function()
+			Enviorment.AppSignal:Fire("ScriptViewer",Explorer.selection.List[1])
+		end,	
+		SelectCharacter = function()
+			for _,plr : Player in Explorer.selection.List do
+				local node = Explorer.GetNodeFromInstance(plr)
+				if plr.Character == nil then continue end
+				for _, parent in Functions.ReverseTable(Functions.GetAncestors(plr.Character)) do
+					local node2 = Explorer.GetNodeFromInstance(parent)
+					if node2 then
+						Explorer.ExpandNode(node2)
+					end
+					task.wait(0.1)
+					Explorer.Refresh()
+				end
+				task.wait(0.1)
+				Explorer.Refresh()
+				local node2 = Explorer.GetNodeFromInstance(plr.Character)
+				if node2 then
+					node2.Selected = true
+				end
+
+				node.Selected = false
+			end
+		end,	
+	}
+	
+	local uis : UserSettings = Enviorment.UIS
+	uis.InputBegan:Connect(function(input, gameProcessed)
+		if Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.Z then ContextFunctions.Cut() end
+		if Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.C then ContextFunctions.Copy() end
+		if Enviorment.IsCtrlDown() and Enviorment.IsShiftDown() and input.KeyCode == Enum.KeyCode.V then ContextFunctions.Paste() end
+		if Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.D then ContextFunctions.Duplicate() end
+		if input.KeyCode == Enum.KeyCode.Delete then ContextFunctions.Delete() end
+		if input.KeyCode == Enum.KeyCode.F2 then ContextFunctions.Rename() end
+		if Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.G then ContextFunctions.Group() end
+		if Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.U then ContextFunctions.Ungroup() end
+		if Enviorment.IsShiftDown() and Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.X then SearchBox:CaptureFocus() end
+	end)
+	
+	context:Register("CUT", {
+		Name = "Cut",
+		IconMap = module.MiscIcons,
+		Icon = "Cut",
+		DisabledIcon = "Cut_Disabled",
+		Shortcut = "Ctrl+Z",
+		OnClick = function()
+			ContextFunctions.Cut()
+		end,
+	})
+
+	context:Register("COPY", {
+		Name = "Copy",
+		IconMap = module.MiscIcons,
+		Icon = "Copy",
+		DisabledIcon = "Copy_Disabled",
+		Shortcut = "Ctrl+C",
+		OnClick = function()
+			ContextFunctions.Copy()
+		end,
+	})
+
+	context:Register("PASTE", {
+		Name = "Paste Into",
+		IconMap = module.MiscIcons,
+		Icon = "Paste",
+		DisabledIcon = "Paste_Disabled",
+		Shortcut = "Ctrl+Shift+V",
+		OnClick = function()
+			ContextFunctions.Paste()
+		end,
+	})
+
+	context:Register("DUPLICATE", {
+		Name = "Duplicate",
+		IconMap = module.MiscIcons,
+		Icon = "Copy",
+		DisabledIcon = "Copy_Disabled",
+		Shortcut = "Ctrl+D",
+		OnClick = function()
+			ContextFunctions.Duplicate()
+		end,
+	})
+
+	context:Register("DELETE", {
+		Name = "Delete",
+		IconMap = module.MiscIcons,
+		Icon = "Delete",
+		DisabledIcon = "Delete_Disabled",
+		Shortcut = "Del",
+		OnClick = function()
+			ContextFunctions.Delete()
+		end,
+	})
+
+	context:Register("RENAME", {
+		Name = "Rename",
+		IconMap = module.MiscIcons,
+		Icon = "Rename",
+		DisabledIcon = "Rename_Disabled",
+		Shortcut = "F2",
+		OnClick = function()
+			ContextFunctions.Rename()
+			
+		end,
+	})
+
+	context:Register("GROUP", {
+		Name = "Group",
+		IconMap = module.MiscIcons,
+		Icon = "Group",
+		DisabledIcon = "Group_Disabled",
+		Shortcut = "Ctrl+G",
+		OnClick = function()
+			ContextFunctions.Group()
+
+		end,
+	})
+
+	context:Register("UNGROUP", {
+		Name = "Ungroup",
+		IconMap = module.MiscIcons,
+		Icon = "Ungroup",
+		DisabledIcon = "Ungroup_Disabled",
+		Shortcut = "Ctrl+U",
+		OnClick = function()
+			ContextFunctions.Ungroup()
+
+		end,
+	})
+
+	context:Register("SELECT_CHILDREN", {
+		Name = "Select Children",
+		IconMap = module.MiscIcons,
+		Icon = "SelectChildren",
+		DisabledIcon = "SelectChildren_Disabled",
+		OnClick = function()
+			--for _,node in Explorer.GetNodes() do if node == nil then continue end;node.Selected = false end
+			ContextFunctions.Select_Children()
+		end,
+	})
+	context:Register("SELECT_DESCENDANTS", {
+		Name = "Select Descendants",
+		IconMap = module.MiscIcons,
+		Icon = "SelectChildren",
+		DisabledIcon = "SelectChildren_Disabled",
+		OnClick = function()
+			ContextFunctions.Select_Descendants()
+		end,
+	})
+	context:Register("JUMP_TO_PARENT", {
+		Name = "Jump to Parent",
+		IconMap = module.MiscIcons,
+		Icon = "JumpToParent",
+		OnClick = function()
+			ContextFunctions.Jump_To_Parent()
+		end,
+	})
+
+	context:Register("TELEPORT_TO", {
+		Name = "Teleport To",
+		IconMap = module.MiscIcons,
+		Icon = "TeleportTo",
+		OnClick = function()
+			ContextFunctions.TeleportTo()
+		end,
+	})
+
+	context:Register("EXPAND_ALL", {
+		Name = "Expand All",
+		OnClick = function()
+			ContextFunctions.ExpandAll()
+		end,
+	})
+
+	context:Register("COLLAPSE_ALL", {
+		Name = "Collapse All",
+		OnClick = function()
+			ContextFunctions.CollapseAll()
+		end,
+	})
+
+	context:Register("CLEAR_SEARCH_AND_JUMP_TO", {
+		Name = "Clear Search and Jump to",
+		OnClick = function()
+			ContextFunctions.Clear_Search_And_Jump_To()
+		end,
+	})
+
+	context:Register("COPY_PATH", {
+		Name = "Copy Path",
+		OnClick = function()
+			ContextMenu.CopyPath()
+		end,
 	})
 
 	context:Register("INSERT_OBJECT", {
@@ -2219,10 +2401,7 @@ module.NewExplorer = function()
 		IconMap = module.MiscIcons,
 		Icon = "InsertObject",
 		OnClick = function()
-			local mouse = Enviorment.LocalPlayer:GetMouse()
-			local x = module.LastX or mouse.X
-			local y = module.LastY or mouse.Y
-			Explorer.InsertObjectContext:Show(x, y)
+			ContextFunctions.InsertObject()
 		end,
 	})
 
@@ -2230,9 +2409,7 @@ module.NewExplorer = function()
 		"CALL_FUNCTION",
 		{ Name = "Call Function", IconMap = module.ClassIcons, Icon = 66, OnClick = 
 			function() 
-				module.InitCallFunction(Explorer)
-				local mouse = Enviorment.LocalPlayer:GetMouse()
-				Explorer.CallFunctionContext:Show(module.LastX or mouse.X,module.LastY or mouse.Y)
+				ContextFunctions.CallFunction()
 			end }
 	)
 
@@ -2245,28 +2422,7 @@ module.NewExplorer = function()
 		"SAVE_INST",
 		{ Name = "Save to File", IconMap = module.MiscIcons, Icon = "Save", OnClick = 
 			function()
-				local passed = false
-				module.SaveInstance:Show()
-				module.SaveInstance:SetText(game.Name .. "rbxl")
-				
-				module.SaveInstance.OnSave:Connect(function(text)
-					if passed then return end
-					passed = true
-					Enviorment.Functions.saveinstance({
-						SafeMode = false,
-						SaveBytecode = true,
-						ExtraInstances = table.clone(Explorer.selection.List),
-						mode = "invalid",
-						__DEBUG_MODE = true,
-						FileName = text,
-						FilePath = text,
-					})
-					
-				end)
-				module.SaveInstance.OnCancel:Connect(function()
-					if passed then return end
-					passed = true
-				end)
+				ContextFunctions.SaveToFile()
 			end }
 	)
 
@@ -2282,15 +2438,7 @@ module.NewExplorer = function()
 		IconMap = module.ClassIcons,
 		Icon = 5,
 		OnClick = function()
-			local sList = selection.List
-
-			for i = 1, #sList do
-				local node = sList[i]
-
-				if node.Obj:IsA("BasePart") or node.Obj:IsA("Model") then
-					ObjectViewer.ViewObject(node.Obj)
-				end
-			end
+			ContextFunctions.ViewObject()
 		end,
 	})
 
@@ -2299,7 +2447,7 @@ module.NewExplorer = function()
 		IconMap = module.MiscIcons,
 		Icon = "ViewScript",
 		OnClick = function()
-			Enviorment.AppSignal:Fire("ScriptViewer",Explorer.selection.List[1])
+			ContextFunctions.ViewScript()
 		end,
 	})
 
@@ -2320,26 +2468,7 @@ module.NewExplorer = function()
 		IconMap = module.ClassIcons,
 		Icon = 9,
 		OnClick = function()
-			for _,plr : Player in Explorer.selection.List do
-				local node = Explorer.GetNodeFromInstance(plr)
-				if plr.Character == nil then continue end
-				for _, parent in Functions.ReverseTable(Functions.GetAncestors(plr.Character)) do
-					local node2 = Explorer.GetNodeFromInstance(parent)
-					if node2 then
-						Explorer.ExpandNode(node2)
-					end
-					task.wait(0.1)
-					Explorer.Refresh()
-				end
-				task.wait(0.1)
-				Explorer.Refresh()
-				local node2 = Explorer.GetNodeFromInstance(plr.Character)
-				if node2 then
-					node2.Selected = true
-				end
-				
-				node.Selected = false
-			end
+			ContextFunctions.SelectCharacter()
 			--Explorer.ViewObject()
 			
 		end,
