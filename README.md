@@ -9,7 +9,10 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs
    - [x] Explorer
        - [x] Right Click Context
        - [x] Insert Object Context
-- [x] Terminal Commands (plugin API is available as 'API' when executing a script in the console. Example: ```lua API.Apps.Explorer.ViewObject(game.Players.LocalPlayer) ```
+- [x] Terminal Commands (plugin API is available as 'API' when executing a script in the console). Example:
+```lua
+   API.Apps.Explorer.ViewObject(game.Players.LocalPlayer)
+```
 - [x] Console
 - [x] Save Instance Menu
 - [ ] Remote Spy
