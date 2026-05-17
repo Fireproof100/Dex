@@ -312,7 +312,7 @@ module.MakeNode = function(Properties,index)
 	
 	local function f1(ex)
 		for _, v in new.ValueFrame:GetChildren() do
-			if table.find({"SettingsButton","RightButton","Line"},v.Name) then continue end
+			if table.find({"SettingsButton","RightButton","Line","Delete"},v.Name) then continue end
 			if v == Properties.InputBox then continue end
 			if ex == nil then v.Visible = false end
 			if typeof(ex) == "table" then
@@ -332,6 +332,10 @@ module.MakeNode = function(Properties,index)
 	Properties.Connected[index] = true
 	local Connections = {}
 	local checkbox2 = Checkbox.new(1)
+	local delete_button = Enviorment.CloseButton()
+	delete_button.Parent = new.ValueFrame
+	delete_button.Position = UDim2.new(1,-delete_button.AbsoluteSize.X,0,delete_button.Position.Y.Offset)
+	delete_button.Name = "Delete"
 	checkbox2.Gui.Parent = new.ValueFrame
 	module.ExpandHighlight(new.NameFrame.Expand)
 	local function RightButton(txt,vis)
@@ -439,10 +443,22 @@ module.MakeNode = function(Properties,index)
 			Properties.Refresh()
 		end)
 		new.RowButton.Visible = false
+		delete_button.Visible = false
 		if node.Button ~= nil then
 			new.RowButton.Visible = true
 			new.RowButton.Text = node.Button.Text or "Button"
+			
 			Connections[#Connections+1] = new.RowButton.Activated:Connect(function() node.Button.Activated:Fire() end)
+			return
+		elseif node.IsTag then
+			delete_button.Visible = true
+			f1(nil)
+			new.NameFrame.PropName.Text = node.Name
+			new.NameFrame.PropName.Font = Enum.Font.SourceSans
+			new.BackgroundColor3 = Enviorment.Settings.Theme.Main2
+			new.NameFrame.Expand.Visible = false
+			Connections[#Connections+1] = delete_button.Activated:Connect(function() node.TagSignal:Fire() end)
+			new.ValueFrame.Visible = true
 			return
 		elseif node.RowText ~= nil then
 			new.Visible = true
@@ -726,6 +742,7 @@ module.New = function()
 	Properties.MakeVisibleContent = {}
 	Properties.Connected = {}
 	Properties.ActiveNodes = {}
+	Properties.TagEditor = module.NewTagEditor(Properties)
 	Properties.RegisterCallback = function(f,entry)
 		if entry then
 			local idx = #Properties.Refresh_Callbacks+1
@@ -859,6 +876,9 @@ module.New = function()
 		local x = 0
 		local function OnNode(node)
 			if node == nil then
+				return
+			end
+			if typeof(node) ~= "table" then
 				return
 			end
 			x = x + 1
@@ -1087,6 +1107,8 @@ module.New = function()
 				return data.Object[data.Property]
 			end,
 			IsAttribute = data.IsAttribute,
+			IsTag = data.IsTag,
+			TagSignal = data.TagSignal,
 			Category = data.IsCategory ~= true and data.Category,
 			IsCategory = data.IsCategory,
 			IsButton = data.IsButton,
@@ -1129,13 +1151,14 @@ module.New = function()
 			node.Category = nil
 			--node.Name = nil
 		end
-		if data.IsButton then
+		if data.IsButton or data.IsTag then
 			node.GetValue = function() return "" end
 			node.SetValue = function() return end
-			node.Writable = function() return false end
+			node.Writable = function() return data.IsTag == true and true or false end
 			node.ForceVisible = true
 			node.Category = nil
 		end
+		
 		if Properties.ExpandableTypes[typeof(node.GetValue())] then
 			for i,subprop in Properties.ExpandableTypes[typeof(node.GetValue())] do
 				local subnode = Properties.AddNode(node,subprop,true,i)
@@ -1169,43 +1192,64 @@ module.New = function()
 		end
 		Properties.Refresh()
 	end
-	
-	Properties.ShowObjectProperties = function(obj : Instance)
-		Properties.ClearNodes()
-		for _, v in Properties.Connections do
-			pcall(function() v:Disconnect() end)
-		end
-		for _, category in Properties.GetProperies_Sorted(obj) do
-			Properties.AddProperty({
-				Object = obj,
-				IsCategory = true,
-				Property = category.Category,
-				NoRefresh = true,
-			})
-			for _,prop in category.props do
-				Properties.AddProperty({
-					Object = obj,
-					Property = prop,
-					Category = category.Category,
-					AutoAdd = true,
-					NoRefresh = true,
-				})
+	Properties.ClearNonProperties = function()
+		for index,node in Properties.Node_List do
+			if node.IsAttribute or node.IsTag or (node.IsCategory == true and node.RowText == "Attributes") or (node.IsCategory == true and node.RowText == "Tags") or (node.IsButton) or node.Button ~= nil then
+				Properties.Node_List[index] = nil
+				task.wait()
 			end
 		end
-		Properties.AddProperty({
+	end
+	Properties.SConnections = {}
+	Properties.ShowObjectNonProperties = function(obj)
+		Properties.DisplayedObjects = {obj}
+		Properties.ClearNonProperties()
+		for _, v in Properties.SConnections do
+			pcall(function() v:Disconnect() end)
+		end
+		local add_in_order = {}
+		add_in_order[#add_in_order+1] = Properties.AddProperty({
+			Object = obj,
+			IsCategory = true,
+			Property = "Tags",
+			NoRefresh = true,
+			AutoAdd = false,
+		})
+		local before_tags = obj:GetTags()
+		for i, tag in before_tags do
+			local n = Properties.AddProperty({
+				Object = obj,
+				IsCategory = false,
+				Property = tag,
+				Category = "Tags",
+				AutoAdd = false,
+				NoRefresh = true,
+				IsAttribute = false,
+				IsTag = true,
+				TagSignal = Signal.new()
+			})
+			add_in_order[#add_in_order+1] = n
+			Properties.SConnections[#Properties.SConnections+1] = n.TagSignal:Connect(function()
+				obj:RemoveTag(tag)
+				Properties.ShowObjectNonProperties(obj)
+			end)
+		end
+		add_in_order[#add_in_order+1] = Properties.AddProperty({
 			Object = obj,
 			IsCategory = true,
 			Property = "Attributes",
 			NoRefresh = true,
+			AutoAdd = false,
 		})
 		local before = obj:GetAttributes()
+		
 		for attribute, value in before do
-			Properties.AddProperty({
+			add_in_order[#add_in_order+1] = Properties.AddProperty({
 				Object = obj,
 				IsCategory = false,
 				Property = attribute,
 				Category = "Attributes",
-				AutoAdd = true,
+				AutoAdd = false,
 				NoRefresh = true,
 				IsAttribute = true,
 			})
@@ -1215,21 +1259,39 @@ module.New = function()
 			Text = "Add Attribute",
 			Activated = Signal.new(),
 		}
-		Properties.AddProperty({
+		local EditorButton = {
+			Text = "Add Tag",
+			Activated = Signal.new(),
+		}
+		add_in_order[#add_in_order+1] = Properties.AddProperty({
 			Object = obj,
 			IsCategory = false,
 			Property = "",
 			Category = "",
-			AutoAdd = true,
+			AutoAdd = false,
 			NoRefresh = true,
 			Button = Button,
 			IsButton = true,
 		})
-		local Button_node = Properties.Node_List[#Properties.Node_List]
-		Properties.Connections[#Properties.Connections+1] = Button.Activated:Connect(function()
+		add_in_order[#add_in_order+1] = Properties.AddProperty({
+			Object = obj,
+			IsCategory = false,
+			Property = "",
+			Category = "",
+			AutoAdd = false,
+			NoRefresh = true,
+			Button = EditorButton,
+			IsButton = true,
+		})
+		local Button_node = add_in_order[#add_in_order+1]
+		local EditorButton_node = add_in_order[#add_in_order]
+		Properties.SConnections[#Properties.SConnections+1] = Button.Activated:Connect(function()
 			Properties.DisplayAddAttributeWindow(Properties.DisplayedObjects)
 		end)
-		Properties.Connections[#Properties.Connections+1] = obj.AttributeChanged:Connect(function(attribute)
+		Properties.SConnections[#Properties.SConnections+1] = EditorButton.Activated:Connect(function()
+			Properties.DisplayAddAttributeWindow(Properties.DisplayedObjects,nil,true)
+		end)
+		Properties.SConnections[#Properties.SConnections+1] = obj.AttributeChanged:Connect(function(attribute)
 			if obj:GetAttribute(attribute) == nil then
 				for i, node in Properties.Node_List do
 					if node.Name == attribute and node.IsAttribute == true and node.Button == nil then
@@ -1250,11 +1312,68 @@ module.New = function()
 					IsAttribute = true,
 				})
 				Properties.Node_List[#Properties.Node_List] = new_node
-				Properties.Node_List[#Properties.Node_List+1] = Button_node
+				for i, v in Properties.Node_List do
+					if v == Button_node then
+						Properties.Node_List[i] = nil
+					end
+					if v == EditorButton_node then
+						Properties.Node_List[i] = nil
+						task.wait()
+					end
+				end
+				
+				
+				--Properties.Node_List[table.find(Properties.Node_List,Button_node)] = nil
+				
 				before = obj:GetAttributes()
 				Properties.Refresh()
+				task.spawn(function()
+					task.wait(0.1)
+					Properties.ShowObjectNonProperties(obj)
+				end)
 			end
 		end)
+		Properties.SConnections[#Properties.SConnections+1] = Enviorment.RunService.Heartbeat:Connect(function()
+			local new = obj:GetTags()
+			for i,v in new do
+				if not table.find(before_tags,v) then
+					before_tags = new
+					Properties.ShowObjectNonProperties(obj)
+					return
+				end
+			end
+		end)
+		for _, v in add_in_order do 
+			Properties.Node_List[#Properties.Node_List+1] = v
+		end
+	end
+	Properties.ShowObjectProperties = function(obj : Instance)
+		Properties.ClearNodes()
+		Properties.TagEditor.AddObjectProperties(obj)
+		for _, v in Properties.Connections do
+			pcall(function() v:Disconnect() end)
+		end
+		for _, category in Properties.GetProperies_Sorted(obj) do
+			Properties.AddProperty({
+				Object = obj,
+				IsCategory = true,
+				Property = category.Category,
+				NoRefresh = true,
+			})
+			for _,prop in category.props do
+				Properties.AddProperty({
+					Object = obj,
+					Property = prop,
+					Category = category.Category,
+					AutoAdd = true,
+					NoRefresh = true,
+				})
+			end
+		end
+		
+		Properties.ShowObjectNonProperties(obj)
+		
+		
 		Properties.Refresh()
 	end
 	Properties.ShowExplorerProps = function(objects)
@@ -1296,7 +1415,7 @@ module.New = function()
 		end
 	end
 	
-	Properties.DisplayAddAttributeWindow = function(objects,attribute)
+	Properties.DisplayAddAttributeWindow = function(objects,attribute,is_tag)
 		local win = Properties.AddAttributeWindow
 		if not win then
 			win = Window.new()
@@ -1355,24 +1474,30 @@ module.New = function()
 			saveButton.Gui.Size = UDim2.new(0,92,0,20)
 			saveButton.OnClick:Connect(function()
 				local name = nameBox:GetText()
-				if #name > 100 then
-					errorLabel.Text = "Error: Name over 100 chars"
-					return
-				elseif name:sub(1,3) == "RBX" and not Enviorment.IsElevated() then
-					errorLabel.Text = "Error: Name begins with 'RBX'"
-					return
-				end
-
-				local typ = typeChooser.Selected
-				if attribute then
-					for _, obj in objects do
-						local _,val = pcall(obj.GetAttribute,obj,attribute)
-						pcall(obj.SetAttribute,obj,attribute,nil)
-						pcall(obj.SetAttribute,obj,nameBox.TextBox.Text,val)
+				if is_tag then
+					for _,obj in objects do
+						pcall(obj.AddTag,obj,name)
 					end
 				else
-					for _, obj in objects do
-						pcall(obj.SetAttribute,obj,nameBox.TextBox.Text,Properties.DefaultPropValue[typ])
+					if #name > 100 then
+						errorLabel.Text = "Error: Name over 100 chars"
+						return
+					elseif name:sub(1,3) == "RBX" and not Enviorment.IsElevated() then
+						errorLabel.Text = "Error: Name begins with 'RBX'"
+						return
+					end
+
+					local typ = typeChooser.Selected
+					if attribute then
+						for _, obj in objects do
+							local _,val = pcall(obj.GetAttribute,obj,attribute)
+							pcall(obj.SetAttribute,obj,attribute,nil)
+							pcall(obj.SetAttribute,obj,nameBox.TextBox.Text,val)
+						end
+					else
+						for _, obj in objects do
+							pcall(obj.SetAttribute,obj,nameBox.TextBox.Text,Properties.DefaultPropValue[typ])
+						end
 					end
 				end
 				
@@ -1386,7 +1511,7 @@ module.New = function()
 			Properties.AddAttributeWindow = win
 		end
 
-		win:SetTitle(attribute ~= nil and "Edit Attribute " .. attribute or "Add Attribute")
+		if is_tag then win:SetTitle("Add Tag") else win:SetTitle(attribute ~= nil and "Edit Attribute " .. attribute or "Add Attribute") end
 		win.Elements.Error.Text = ""
 		win.Elements.NameBox:SetText("")
 		win.Elements.SaveButton:SetDisabled(true)
@@ -1637,11 +1762,12 @@ module.New = function()
 			if Properties.ScrollY.Index ~= OldYOffset then
 				OldYOffset = Properties.ScrollY.Index
 				Properties.YOffset = OldYOffset
+				Properties.ScrollY.TotalSpace = Properties.GetLenght()
 				Properties.InputTextBox:ReleaseFocus()
 				Properties.Refresh(true)
 			end
 			Properties.ScrollY.VisibleSpace = math.round(Properties.Window.GuiElems.Content.AbsoluteSize.Y / 20) - 10
-			Properties.ScrollY.TotalSpace = Properties.GetLenght()
+			
 			local index = 0
 			for _, new in Properties.NodeContent:GetChildren() do
 				if new.Visible == false then
@@ -1662,6 +1788,97 @@ module.New = function()
 	end)
 	return Properties
 end
+module.NewTagEditor = function(Properties)
+	local sub_module = {}
+	sub_module.YOffset = 0
+	sub_module.Node_List = {}
+	sub_module.Window = Window.new()
+	sub_module.Window.SetTitle(sub_module.Window,"Tag Editor")
+	sub_module.Window.Resizable = false
+	
+	sub_module.UpdateFunctions = {}
+	sub_module.GetAtIndex = function(index,nooffset) local final = nooffset == true and index or index + sub_module.YOffset ;return sub_module.Node_List[final] end
+	sub_module.MakeNode = function(i)
+		local new = module.NewEntryTemplate()
+		local delete_button = Enviorment.CloseButton()
+		delete_button.Parent = new.ValueFrame
+		delete_button.Position = UDim2.new(1,-delete_button.AbsoluteSize.X,0,delete_button.Position.Y.Offset)
+		delete_button.Name = "Delete"
+		local function f1(ex)
+			for _, v in new.ValueFrame:GetChildren() do
+				if table.find({"SettingsButton","RightButton","Line","Delete"},v.Name) then continue end
+				if v == Properties.InputBox then continue end
+				if ex == nil then v.Visible = false end
+				if typeof(ex) == "table" then
+					if table.find(ex,v) then
+						v.Visible = true
+					else
+						v.Visible = false
+					end
+					continue
+				end
+				if v ~= ex then v.Visible = false;continue end
 
+
+				v.Visible = true
+			end
+		end
+		f1(nil)
+		new.ValueFrame.Visible = true
+		local connections = {}
+		sub_module[#sub_module+1] = function()
+			for _,v in connections do
+				pcall(function()
+					connections:Disconnect()
+				end)
+			end
+			local node = sub_module.GetAtIndex(i)
+			if node == nil then
+				new.Visible = false
+				return
+			end
+			new.NameFrame.Expand.Visible = false
+			new.NameFrame.PropName.Text = node.Name;
+			connections[#connections+1] = delete_button.Activated:Connect(function()
+				node.Object:RemoveTag(node.Name)
+			end)
+		end
+		new.Parent = sub_module.Window.GuiElems.Content
+		new.Position = UDim2.new(0,0,0,20 * (i-1))
+		
+	end
+	sub_module.Clear = function() sub_module.Node_List = {} end
+	sub_module.Refresh = function(instant) 
+		for _, v in sub_module.UpdateFunctions do 
+			if instant then 
+				task.spawn(v)
+			else 
+				v()
+			end 
+		end 
+	end
+	sub_module.AddProperty = function(data)
+		local new = {
+			Object = data.Object,
+			Name = data.Name,
+		}
+		if data.AutomaticAdd ~= false then
+			sub_module.Node_List[#sub_module.Node_List+1] = new
+		end
+		sub_module.Refresh()
+	end
+	sub_module.RemakeEntries = function()
+		for i=1,15 do sub_module.MakeNode(i) end
+	end
+	sub_module.AddObjectProperties = function(object : Instance)
+		sub_module.Clear()
+		for _, tag in object:GetTags() do
+			sub_module.AddProperty({Object = object,Name = tag,Tag = tag})
+		end
+		sub_module.Clear()
+	end
+	sub_module.RemakeEntries()
+	return sub_module
+end
 module.Init = module.New
 return module
