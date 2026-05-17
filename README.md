@@ -5,34 +5,33 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs/heads/main/out.luau"))()
 ```
 # TO-DOs
-- [ ] Replace every old icon with a new one (since they got replaced by roblox and everything looks weird)
-   - [ ] Explorer
-       - [ ] Right Click Context
-       - [ ] Insert Object Context
+- [x] Replace every old icon with a new one (since they got replaced by roblox and everything looks weird)
+   - [x] Explorer
+       - [x] Right Click Context
+       - [x] Insert Object Context
 - [ ] Terminal
 - [x] Console
-- [ ] Save Instance Menu
+- [x] Save Instance Menu
 - [ ] Remote Spy
 - [ ] Explorer
   - [x] Call Function
   - [x] Save Instance
   - [ ] Selection Box
-  - [ ] Better Search
+  - [x] Better Search
   - [ ] Search filters and autofill
-  - [ ] Working shortcuts
+  - [x] Working shortcuts
   - [x] Rewrite
 - [ ] Properties
-  - [ ] Tag Editor
+  - [x] Tag Editor
   - [ ] Copy Value
   - [x] Rewrite
-  - [ ] Working shortcuts
 - [ ] Script Viewer
   - [ ] Autofill
   - [ ] Info Bar
   - [ ] Dump Functions
   - [x] Tabs 
-- [ ] Click to Select
+- [x] Click to Select
 - [ ] Binary SaveInstance Module 
 - [ ] 3D Model Viewer
 - [ ] Settings
-- [ ] Plugin API
+- [x] Plugin API
