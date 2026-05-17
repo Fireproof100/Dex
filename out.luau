@@ -7,20 +7,13 @@
  Y888P  ~Y8888P' Y888888P      888888D      Y88888P ~Y8888P' YP   YP  CONVERTER 
 ]=]
 
--- Instances: 39 | Scripts: 0 | Modules: 32 | Tags: 0
+-- Instances: 41 | Scripts: 0 | Modules: 34 | Tags: 0
 local G2L = {};
+
+-- StarterGui.dex
 local cloneref = cloneref or function(...) return (...) end
-local gethui = gethui or function()
-	local s,_ = pcall(function()
-		return cloneref(game:GetService("CoreGui")):GetFullName()
-	end)
-	if s then
-		return cloneref(game:GetService("CoreGui"))
-	else
-		return cloneref(game:GetService("Players")).LocalPlayer.PlayerGui
-	end
-end
-G2L["1"] = Instance.new("ScreenGui",gethui());
+local gethui = gethui or function() local s,_ = pcall(function() cloneref(game.CoreGui):GetFullName() end); if s then return cloneref(game.CoreGui) end;return cloneref(game.Players).LocalPlayer.PlayerGui; end
+G2L["1"] = Instance.new("ScreenGui", gethui());
 G2L["1"]["Enabled"] = false;
 G2L["1"]["Name"] = [[dex]];
 G2L["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
@@ -192,29 +185,39 @@ G2L["22"] = Instance.new("ModuleScript", G2L["1e"]);
 G2L["22"]["Name"] = [[Highlighter]];
 
 
+-- StarterGui.dex.Modules.PluginAPI
+G2L["23"] = Instance.new("ModuleScript", G2L["1e"]);
+G2L["23"]["Name"] = [[PluginAPI]];
+
+
 -- StarterGui.dex.Apps
-G2L["23"] = Instance.new("Folder", G2L["1"]);
-G2L["23"]["Name"] = [[Apps]];
+G2L["24"] = Instance.new("Folder", G2L["1"]);
+G2L["24"]["Name"] = [[Apps]];
 
 
 -- StarterGui.dex.Apps.Explorer
-G2L["24"] = Instance.new("ModuleScript", G2L["23"]);
-G2L["24"]["Name"] = [[Explorer]];
+G2L["25"] = Instance.new("ModuleScript", G2L["24"]);
+G2L["25"]["Name"] = [[Explorer]];
 
 
 -- StarterGui.dex.Apps.ScriptViewer
-G2L["25"] = Instance.new("ModuleScript", G2L["23"]);
-G2L["25"]["Name"] = [[ScriptViewer]];
+G2L["26"] = Instance.new("ModuleScript", G2L["24"]);
+G2L["26"]["Name"] = [[ScriptViewer]];
 
 
 -- StarterGui.dex.Apps.Properties
-G2L["26"] = Instance.new("ModuleScript", G2L["23"]);
-G2L["26"]["Name"] = [[Properties]];
+G2L["27"] = Instance.new("ModuleScript", G2L["24"]);
+G2L["27"]["Name"] = [[Properties]];
 
 
 -- StarterGui.dex.Apps.Console
-G2L["27"] = Instance.new("ModuleScript", G2L["23"]);
-G2L["27"]["Name"] = [[Console]];
+G2L["28"] = Instance.new("ModuleScript", G2L["24"]);
+G2L["28"]["Name"] = [[Console]];
+
+
+-- StarterGui.dex.Apps.SaveInstance
+G2L["29"] = Instance.new("ModuleScript", G2L["24"]);
+G2L["29"]["Name"] = [[SaveInstance]];
 
 
 -- Require G2L wrapper
@@ -234,7 +237,9 @@ end
 
 G2L_MODULES[G2L["2"]] = {
 Closure = function()
-    local script = G2L["2"];
+    local script = G2L["2"];-- Console, Enviorment SaveInstance, Loader, Explorer, Properties, ScriptViewer
+--require(game.Players.LocalPlayer.PlayerGui.dex.Loader).Init()
+--print(workspace:GetTags())
 local s = {
 	Init = function()
 		local Apps = {}
@@ -441,14 +446,42 @@ local s = {
 			Main.CreateApp({Name = "Properties", IconMap = Enviorment.LargeIcons, Icon = "Properties", Open = true, Window = Apps.Properties.Window})
 
 			Main.CreateApp({Name = "Script Viewer", IconMap = Enviorment.LargeIcons, Icon = "Script_Viewer", Window = Apps.ScriptViewer.Window})
+			
 
+			local cptsOnMouseClick = nil
+			Main.CreateApp({Name = "Click part to select", IconMap = Enviorment.LargeIcons, Icon = "Book", OnClick = function(callback)
+				if callback then
+					local mouse = Enviorment.Mouse
+					cptsOnMouseClick = mouse.Button1Down:Connect(function()
+						pcall(function()
+							local object = mouse.Target
+							Apps.Explorer.Window:Show()
+							Apps.Explorer.ViewObject(object)
+						end)
+					end)
+				else if cptsOnMouseClick ~= nil then cptsOnMouseClick:Disconnect() cptsOnMouseClick = nil end end
+			end})
+			
 			Main.CreateApp({Name = "Console", IconMap = Enviorment.LargeIcons, Icon = "Output", Window = Apps.Console.Window})
+			
+			Main.CreateApp({Name = "Save Instance", IconMap = Enviorment.LargeIcons, Icon = "Watcher", Window = Apps.SaveInstance.Window})
 
 			--Main.CreateApp({Name = "Remote Spy", IconMap = Enviorment.LargeIcons, Icon = "Script_Viewer", Window = Apps.RemoteSpy.Window})
 			--Lib.ShowGui(gui)
 			gui.Parent = script.Parent
 		end
 		CreateMainGui()
+		Enviorment.AppSignal:Connect(function(appName,callback)
+			if appName == "Loader" then
+				return callback(Apps,Main)
+			end
+		end)
+		local PluginAPI = require(script.Parent.Modules.PluginAPI)
+		if getgenv ~= nil then
+			getgenv().Dex = PluginAPI
+		else
+			_G.Dex = PluginAPI
+		end
 		Apps.Explorer.Window:Show({ Align = "right", Pos = 1, Size = 0.5, Silent = true })
 		Apps.Properties.Window:Show({ Align = "right", Pos = 2, Size = 0.5, Silent = true })
 		if Apps.ExplorerDex then
@@ -8895,7 +8928,7 @@ __index = function(t,k)
 	return rawget(t,k) or module_hidden[k]
 end})
 --module.ExecutorSupport = require(script.Parent.ExecutorSupport)
-module.Version = "Nightly 1.1.0"
+module.Version = "Nightly 2.0.0"
 -- Enviorment Functions
 module.Functions = {}
 module.Functions.org = {
@@ -9302,6 +9335,40 @@ module.FetchAPI = function(callbackiflong, callbackiftoolong, XD)
 		GetMember = getMember
 	}
 end
+module.CloseButton = function()
+	local n : TextButton = module.create({{
+		1,
+		"TextButton",
+		{
+			AutoButtonColor = false,
+			BackgroundColor3 = module.Settings.Theme.Menu,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Font = 3,
+			Name = "Close",
+			Parent = { 5 },
+			Position = UDim2.new(1, -18, 0, 2),
+			Size = UDim2.new(0, 16, 0, 16),
+			Text = "",
+			TextColor3 = Color3.new(1, 1, 1),
+			TextSize = 14,
+		},
+	},
+		{
+			2,
+			"ImageLabel",
+			{
+				BackgroundColor3 = Color3.new(1, 1, 1),
+				BackgroundTransparency = 1,
+				Image = "rbxassetid://5054663650",
+				Parent = { 1 },
+				Position = UDim2.new(0, 3, 0, 3),
+				Size = UDim2.new(0, 10, 0, 10),
+			},
+		},})
+	return n
+end
+
 module.IsShiftDown = function()
 	return module.UIS:IsKeyDown(Enum.KeyCode.LeftShift)
 		or module.UIS:IsKeyDown(Enum.KeyCode.RightShift)
@@ -9549,6 +9616,7 @@ module.CheckMouseInGui = function(g)
 	return s == true and r or false
 end
 module.TextService = module.cloneref(game:GetService("TextService"))
+module.MarketplaceService = module.cloneref(game:GetService("MarketplaceService"))
 module.Settings = {
 	Explorer = {
 		_Recurse = true,
@@ -9580,6 +9648,7 @@ module.Settings = {
 		_Recurse = true,
 		Main1 = Color3.fromRGB(52, 52, 52),
 		Main2 = Color3.fromRGB(45, 45, 45),
+		Main3 = Color3.fromRGB(37,37,37),
 		Outline1 = Color3.fromRGB(33, 33, 33), -- Mainly frames
 		Outline2 = Color3.fromRGB(55, 55, 55), -- Mainly button
 		Outline3 = Color3.fromRGB(30, 30, 30), -- Mainly textbox
@@ -10238,9 +10307,53 @@ end
 return highlighter
 end;
 };
-G2L_MODULES[G2L["24"]] = {
+G2L_MODULES[G2L["23"]] = {
 Closure = function()
-    local script = G2L["24"];local module = {}
+    local script = G2L["23"];local module = {}
+local Enviorment = require(script.Parent.Enviorment)()
+local args = {...};
+local enabled = args[1] or true;
+local Apps = nil;
+local Loader = nil;
+Enviorment.AppSignal:Fire("Loader",function(v,v2) Apps = v;Loader = v2;end)
+local Components = {}
+local ComponentsMt = {__index = function(_,name)
+	return require(script.Parent.Parent.UI:FindFirstChild(name))
+end,}
+setmetatable(Components,ComponentsMt)
+table.freeze(Components)
+ComponentsMt.__metatable = "No."
+local ReadonlyEnv = newproxy(true)
+local mt = getmetatable(ReadonlyEnv)
+mt.__metatable = "No."
+mt.__index = Enviorment
+
+local ReadonlyMain = newproxy(true)
+local mt2 = getmetatable(ReadonlyMain)
+mt2.__metatable = "No."
+mt2.__index = Loader
+
+local API = {
+	Apps = Apps;
+	Enviorment = ReadonlyEnv;
+	Components = Components;
+	Main = ReadonlyMain;
+}
+module.Enabled = enabled;
+local WrappedAPI = newproxy(true)
+local mt3 = getmetatable(WrappedAPI)
+mt3.__metatable = "No."
+mt3.__index = API
+
+module.API = WrappedAPI
+
+return module
+
+end;
+};
+G2L_MODULES[G2L["25"]] = {
+Closure = function()
+    local script = G2L["25"];local module = {}
 local Enviorment = require(script.Parent.Parent.Modules.Enviorment)()
 local Functions = require(script.Parent.Parent.Modules.Functions)
 local info = require(script.Parent.Parent.UI.Info)
@@ -10264,7 +10377,7 @@ module.InitInsertObject = function(node_list)
 		TextColor =  Enviorment.Settings.Theme.Text,
 		HighlightColor =  Enviorment.Settings.Theme.ButtonHover
 	})
-
+	context.Iconless = true
 	local classes = {}
 	for i,class in Enviorment.API.Classes do
 		local tags = class.Tags
@@ -10324,6 +10437,7 @@ module.InitCallFunction = function(Explorer)
 	local context = Explorer.CallFunctionContext
 	if context == nil then
 		context = ContextMenu.new()
+		context.Iconless = true
 		context.SearchEnabled = true
 		context.MaxHeight = 400
 		context.Width = 325
@@ -10733,41 +10847,7 @@ module.CreateNode = function(Explorer,index)
 	local Update = nil
 	local OldValue = nil
 	local TempConnections = {}
-	local ValueChanged = function(node)
-		if node == nil then
-			for _, v in TempConnections do v:Disconnect() end;return
-		end
-		if node.Instance == nil then
-			for _, v in TempConnections do v:Disconnect() end;return
-		end
-		for _, v in TempConnections do v:Disconnect() end;
-		--task.wait(1)
-		TempConnections["ChildAdded"] = node.Instance.ChildAdded:Connect(function()
-			--warn("fired1")
-			if node.Expanded then 
-				Explorer.ExpandNode(node,true)
-				--Explorer.Refresh() 
-			end
-			if Explorer.Searching and Enviorment.Settings.Explorer.AutoUpdateSearch then
-				Explorer.StartSearch(Explorer.SearchText)
-			end
-		end)
-		local debounce = false
-		TempConnections["Destroying"] = node.Instance.AncestryChanged:Connect(function()
-			node.RemoveOnSight = true
-			Update()
-			Explorer.GetAtIndex(index)
-			Explorer.Refresh(true)
-		end)
-		TempConnections["Destroying2"] = node.Instance.Changed:Connect(function(p)
-			if p ~= "Parent" then return end
-			node.RemoveOnSight = true
-			Update()
-			Explorer.GetAtIndex(index)
-			Explorer.Refresh(true)
-		end)
-		--warn("Connected")
-	end
+	
 	module.ExpandHighlight(new.Indent.Expand)
 	Update = function()
 		new.Position = UDim2.new(0,0,0,(index - 1) * 20)
@@ -10790,15 +10870,17 @@ module.CreateNode = function(Explorer,index)
 		end
 		if node.Indent then
 			local indent = node.Indent
-			if Explorer.GetIndentIncrement(node) ~= 0 then
-				indent = indent + Explorer.GetIndentIncrement(node)
+			local indent2 = Explorer.GetIndentIncrement(node) 
+			if indent2 ~= 0 then
+				indent = indent + indent2
 			end
 			new.Indent.Position = UDim2.new(0,(info.Explorer_IndentSeparation * indent) - Explorer.XOffset,0,0) -- 18
 			new:SetAttribute("XOffset",(info.Explorer_IndentSeparation * indent))
 		elseif node.Instance then
 			local indent = #Functions.GetAncestors(node.Instance)
-			if Explorer.GetIndentIncrement(node) ~= 0 then
-				indent = indent + Explorer.GetIndentIncrement(node)
+			local i2 =  Explorer.GetIndentIncrement(node)
+			if i ~= 0 then
+				indent = indent + i2
 			end
 			new.Indent.Position = UDim2.new(0,(info.Explorer_IndentSeparation * indent) - Explorer.XOffset ,0,0)
 			new:SetAttribute("XOffset",(info.Explorer_IndentSeparation * indent))
@@ -10806,10 +10888,7 @@ module.CreateNode = function(Explorer,index)
 			-- TODO
 		end
 		
-		if OldValue ~= node.Instance then
-			task.spawn(ValueChanged,node)
-			OldValue = node.Instance
-		end
+		
 		--if node.Highlighted then
 		--	new.BackgroundColor3 = Enviorment.Settings.Theme.Highlight
 		--	new.BackgroundTransparency = node.Selected ~= true and 0 or 1
@@ -10903,6 +10982,41 @@ module.CreateNode = function(Explorer,index)
 			new.Indent.Icon.Image = Functions.GetIcon(node.Instance.ClassName)
 			--new.Indent.Icon.Size = UDim2.new(1,0,1,0)
 			--new.Indent.Icon.Position = UDim2.new(0,0,0,0)
+		end
+		if OldValue ~= node.Instance then
+			if node == nil then
+				for _, v in TempConnections do v:Disconnect() end;return
+			end
+			if node.Instance == nil then
+				for _, v in TempConnections do v:Disconnect() end;return
+			end
+			for _, v in TempConnections do v:Disconnect() end;
+			--task.wait(1)
+			TempConnections["ChildAdded"] = node.Instance.ChildAdded:Connect(function()
+				--warn("fired1")
+				if node.Expanded then 
+					Explorer.ExpandNode(node,true)
+					--Explorer.Refresh() 
+				end
+				if Explorer.Searching and Enviorment.Settings.Explorer.AutoUpdateSearch then
+					Explorer.StartSearch(Explorer.SearchText)
+				end
+			end)
+			local debounce = false
+			TempConnections["Destroying"] = node.Instance.AncestryChanged:Connect(function()
+				node.RemoveOnSight = true
+				Update()
+				Explorer.GetAtIndex(index)
+				Explorer.Refresh(true)
+			end)
+			TempConnections["Destroying2"] = node.Instance.Changed:Connect(function(p)
+				if p ~= "Parent" then return end
+				node.RemoveOnSight = true
+				Update()
+				Explorer.GetAtIndex(index)
+				Explorer.Refresh(true)
+			end)
+			OldValue = node.Instance
 		end
 		
 	end
@@ -11626,6 +11740,18 @@ module.NewExplorer = function()
 			local n = Explorer.GetNodesInRange()
 			return #n
 		end,
+		GetLenght = function()
+			local x = 0
+			local function OnNode(node)
+				if node == nil then return end
+				x += 1
+				if node.Expanded and node.Subnodes then
+					for _, v in node.Subnodes do OnNode(v) end
+				end
+			end
+			for _, v in Explorer.Nodes do OnNode(v) end
+			return x
+		end,
 		GetNodeFromInstance = function(obj)
 			for _,node in Explorer.GetNodes() do
 				if node.Instance == obj then return node end
@@ -11759,6 +11885,9 @@ module.NewExplorer = function()
 			context:Show()
 		end,
 		ViewObject = function(inst)
+			if Explorer.IsObjectVisible(inst) then
+				--return
+			end
 			local ancestors = Functions.GetAncestors(inst)
 			ancestors = Functions.ReverseTable(ancestors)
 			for _, inst2 in ancestors do
@@ -11783,7 +11912,28 @@ module.NewExplorer = function()
 				Explorer.ScrollY.Index = index - 2
 				Explorer.ScrollY:Update()
 			end
+			for _, v in Explorer.GetNodes() do
+				if v == nil then
+					continue
+				end
+				
+				if v == node then
+					continue
+				end
+				v.Selected = false
+			end
 			Explorer.Refresh()
+		end,
+		IsNodeVisible = function(node)
+			if node == nil then return false end
+			local index = Explorer.GetNodeIndex(node)
+			if index == nil then return false end
+			return index >= Explorer.ScrollY.Index and index <= Explorer.ScrollY.Index + Explorer.ScrollY.VisibleSpace
+		end,
+		IsObjectVisible = function(obj : Instance)
+			local node = Explorer.GetNodeFromInstance(obj)
+			if node == nil then return false end
+			return Explorer.IsNodeVisible(node)
 		end,
 	}
 	Explorer.NodeContainer = Explorer.Window.GuiElems.Content:Clone()
@@ -11943,12 +12093,17 @@ module.NewExplorer = function()
 	Explorer.NilInstancesFolder.Name = table.pack(Enviorment.Functions.getnilinstances())[2] == true and "Nil Instances" or "Nil Instances [Not Supported]"
 	
 	SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-		if SearchBox.Text ~= "" then
-			Explorer.StartSearch(SearchBox.Text)
-		else
+		if SearchBox.Text == "" then
 			Explorer.StopSearch()
 		end
 		
+	end)
+	SearchBox.FocusLost:Connect(function(pressed : boolean)
+		if pressed then
+			Explorer.StopSearch()
+			task.wait()
+			Explorer.StartSearch(SearchBox.Text)
+		end
 	end)
 	
 	local function AddTopObject(obj)
@@ -12015,7 +12170,7 @@ module.NewExplorer = function()
 	end)
 	
 	--- ScrollBar
-	workspace:SetAttribute("YOffset",0)
+	--workspace:SetAttribute("YOffset",0)
 	local explorerScroll = ScrollBar.new()
 	local explorerScrollH = ScrollBar.new(true)
 	
@@ -12050,6 +12205,11 @@ module.NewExplorer = function()
 	explorerScrollH.Gui.Position = UDim2.new(0,0,1,-16)
 	explorerScrollH.Gui.Size = UDim2.new(1,-16,0,16)
 	task.spawn(function()
+		while task.wait(5) do
+			explorerScroll.TotalSpace = Explorer.GetLenght()
+		end
+	end)
+	task.spawn(function()
 		local old = 0
 		local old2 = 0
 		while task.wait() do
@@ -12071,15 +12231,17 @@ module.NewExplorer = function()
 			end
 
 			local NodeWidth = highest
-			explorerScroll.TotalSpace = Explorer.GetMaxIndex() --* info.Explorer_IndentSeparation
+			 --* info.Explorer_IndentSeparation
 			if explorerScroll.Index ~= old then
 				Explorer.YOffset = explorerScroll.Index
 				old = explorerScroll.Index
+				explorerScroll.TotalSpace = Explorer.GetLenght()
 				Explorer.Refresh(true)
 			end
 			if explorerScrollH.Index ~= old2 then
 				Explorer.XOffset = explorerScrollH.Index
 				old2 = explorerScrollH.Index
+				explorerScroll.TotalSpace = Explorer.GetLenght()
 				Explorer.Refresh(true)
 			end
 
@@ -12134,15 +12296,11 @@ module.NewExplorer = function()
 	module.InitInsertObject(Explorer)
 	local clipboard = Explorer.clipboard
 	context = context.new()
+	context.Iconless = true
 	Explorer.ContextMenu = context
 	Explorer.Context = context
-	context:Register("CUT", {
-		Name = "Cut",
-		IconMap = module.MiscIcons,
-		Icon = "Cut",
-		DisabledIcon = "Cut_Disabled",
-		Shortcut = "Ctrl+Z",
-		OnClick = function()
+	local ContextFunctions = {
+		Cut = function()
 			table.clear(Explorer.clipboard)
 			for _, inst in Explorer.selection.List do
 				pcall(function()
@@ -12155,15 +12313,7 @@ module.NewExplorer = function()
 
 			end
 		end,
-	})
-
-	context:Register("COPY", {
-		Name = "Copy",
-		IconMap = module.MiscIcons,
-		Icon = "Copy",
-		DisabledIcon = "Copy_Disabled",
-		Shortcut = "Ctrl+C",
-		OnClick = function()
+		Copy = function()
 			table.clear(Explorer.clipboard)
 			for _, inst in Explorer.selection.List do
 				pcall(function()
@@ -12171,68 +12321,29 @@ module.NewExplorer = function()
 				end)
 			end
 		end,
-	})
-
-	context:Register("PASTE", {
-		Name = "Paste Into",
-		IconMap = module.MiscIcons,
-		Icon = "Paste",
-		DisabledIcon = "Paste_Disabled",
-		Shortcut = "Ctrl+Shift+V",
-		OnClick = function()
+		Paste = function()
 
 			for _,inst in Explorer.clipboard do
 				inst.Parent = Explorer.selection.List[1]
 			end
 			--n--ode_list.ViewObject(Explorer.selection.List[1])
 		end,
-	})
-
-	context:Register("DUPLICATE", {
-		Name = "Duplicate",
-		IconMap = module.MiscIcons,
-		Icon = "Copy",
-		DisabledIcon = "Copy_Disabled",
-		Shortcut = "Ctrl+D",
-		OnClick = function()
+		
+		Duplicate = function()
 			for _, inst in Explorer.selection.List do
 				pcall(function() inst:Clone().Parent = inst.Parent end)
 			end
 		end,
-	})
-
-	context:Register("DELETE", {
-		Name = "Delete",
-		IconMap = module.MiscIcons,
-		Icon = "Delete",
-		DisabledIcon = "Delete_Disabled",
-		Shortcut = "Del",
-		OnClick = function()
+		Delete = function()
 			for _, inst in Explorer.selection.List do
 				pcall(game.Destroy,inst)
 			end
 		end,
-	})
-
-	context:Register("RENAME", {
-		Name = "Rename",
-		IconMap = module.MiscIcons,
-		Icon = "Rename",
-		DisabledIcon = "Rename_Disabled",
-		Shortcut = "F2",
-		OnClick = function()
+		
+		Rename = function()
 			Explorer.SetRenaming(Explorer.GetNodeFromInstance(Explorer.selection.List[1]))
-			
 		end,
-	})
-
-	context:Register("GROUP", {
-		Name = "Group",
-		IconMap = module.MiscIcons,
-		Icon = "Group",
-		DisabledIcon = "Group_Disabled",
-		Shortcut = "Ctrl+G",
-		OnClick = function()
+		Group = function()
 			local sList = Explorer.selection.List
 			if #sList == 0 then
 				return
@@ -12249,17 +12360,8 @@ module.NewExplorer = function()
 				repeat task.wait(0.1) until Explorer.GetNodeFromInstance(model) ~= nil
 				Explorer.SelectNode(Explorer.GetNodeFromInstance(model),true,true)
 			end)
-
 		end,
-	})
-
-	context:Register("UNGROUP", {
-		Name = "Ungroup",
-		IconMap = module.MiscIcons,
-		Icon = "Ungroup",
-		DisabledIcon = "Ungroup_Disabled",
-		Shortcut = "Ctrl+U",
-		OnClick = function()
+		Ungroup = function()
 			local newSelection = {}
 			for _,inst in Explorer.selection.List do
 				for _, v in inst:GetChildren() do
@@ -12275,17 +12377,8 @@ module.NewExplorer = function()
 			for _, inst in newSelection do
 				Explorer.SelectNode(Explorer.GetNodeFromInstance(inst),true,false)
 			end
-
 		end,
-	})
-
-	context:Register("SELECT_CHILDREN", {
-		Name = "Select Children",
-		IconMap = module.MiscIcons,
-		Icon = "SelectChildren",
-		DisabledIcon = "SelectChildren_Disabled",
-		OnClick = function()
-			--for _,node in Explorer.GetNodes() do if node == nil then continue end;node.Selected = false end
+		Select_Children = function()
 			local newSelection = {}
 			local oldSelection = {}
 			for _, inst in Explorer.selection.List do
@@ -12293,7 +12386,7 @@ module.NewExplorer = function()
 				if node == nil then
 					continue
 				end
-				
+
 				local firstIndex = Explorer.GetNodeIndex(node)
 				local secondNode = node
 				local secondIndex = 0
@@ -12326,13 +12419,7 @@ module.NewExplorer = function()
 			end
 			Explorer.Refresh()
 		end,
-	})
-	context:Register("SELECT_DESCENDANTS", {
-		Name = "Select Descendants",
-		IconMap = module.MiscIcons,
-		Icon = "SelectChildren",
-		DisabledIcon = "SelectChildren_Disabled",
-		OnClick = function()
+		Select_Descendants = function()
 			for _, inst in Explorer.selection.List do
 				local node = Explorer.GetNodeFromInstance(inst)
 				if node == nil then
@@ -12367,12 +12454,7 @@ module.NewExplorer = function()
 			end
 			Explorer.Refresh()
 		end,
-	})
-	context:Register("JUMP_TO_PARENT", {
-		Name = "Jump to Parent",
-		IconMap = module.MiscIcons,
-		Icon = "JumpToParent",
-		OnClick = function()
+		Jump_To_Parent = function()
 			local newSelection = {}
 			local oldSelection = {}
 			for _,inst in Explorer.selection.List do
@@ -12389,57 +12471,30 @@ module.NewExplorer = function()
 				node.Selected = false
 			end
 		end,
-	})
-
-	context:Register("TELEPORT_TO", {
-		Name = "Teleport To",
-		IconMap = module.MiscIcons,
-		Icon = "TeleportTo",
-		OnClick = function()
+		TeleportTo = function()
 			pcall(function()
 				Enviorment.LocalPlayer.Character.PrimaryPart:PivotTo(Explorer.selection.List[1]:GetPivot())
 			end)
-		end,
-	})
-
-	context:Register("EXPAND_ALL", {
-		Name = "Expand All",
-		OnClick = function()
-			warn("___")
+		end,	
+		ExpandAll = function()
 			for _, inst in Explorer.selection.List do
-				warn("s",inst)
 				local node = Explorer.GetNodeFromInstance(inst)
-				warn("?",node)
 				Explorer.ExpandAll(node)
-				warn("n",inst)
 			end
-			warn("!")
 			Explorer.Refresh()
-		end,
-	})
-
-	context:Register("COLLAPSE_ALL", {
-		Name = "Collapse All",
-		OnClick = function()
+		end,	
+		CollapseAll = function()
 			for _, inst in Explorer.selection.List do
 				Explorer.CollapseAll(Explorer.GetNodeFromInstance(inst))
 			end
-		end,
-	})
-
-	context:Register("CLEAR_SEARCH_AND_JUMP_TO", {
-		Name = "Clear Search and Jump to",
-		OnClick = function()
+		end,	
+		Clear_Search_And_Jump_To = function()
 			local inst = Explorer.selection.List[1]
 			SearchBox.Text = "";
 			task.wait(0.1)
 			Explorer.ViewObject(inst)
 		end,
-	})
-
-	context:Register("COPY_PATH", {
-		Name = "Copy Path",
-		OnClick = function()
+		CopyPath = function()
 			local path = ""
 			if #Explorer.selection.List > 1 then
 				path = path .. "{"
@@ -12454,6 +12509,246 @@ module.NewExplorer = function()
 			end
 			Enviorment.Functions.setclipboard(path)
 		end,
+		InsertObject = function()
+			local mouse = Enviorment.LocalPlayer:GetMouse()
+			local x = module.LastX or mouse.X
+			local y = module.LastY or mouse.Y
+			Explorer.InsertObjectContext:Show(x, y)
+		end,
+		CallFunction = function()
+			module.InitCallFunction(Explorer)
+			local mouse = Enviorment.LocalPlayer:GetMouse()
+			Explorer.CallFunctionContext:Show(module.LastX or mouse.X,module.LastY or mouse.Y)
+		end,
+		SaveToFile = function()
+			local passed = false
+			module.SaveInstance:Show()
+			module.SaveInstance:SetText(game.Name .. "rbxl")
+
+			module.SaveInstance.OnSave:Connect(function(text)
+				if passed then return end
+				passed = true
+				Enviorment.Functions.saveinstance({
+					SafeMode = false,
+					SaveBytecode = true,
+					ExtraInstances = table.clone(Explorer.selection.List),
+					mode = "invalid",
+					__DEBUG_MODE = true,
+					FileName = text,
+					FilePath = text,
+				})
+
+			end)
+			module.SaveInstance.OnCancel:Connect(function()
+				if passed then return end
+				passed = true
+			end)
+		end,	
+		ViewObject = function()
+			local sList = selection.List
+
+			for i = 1, #sList do
+				local node = sList[i]
+
+				if node.Obj:IsA("BasePart") or node.Obj:IsA("Model") then
+					ObjectViewer.ViewObject(node.Obj)
+				end
+			end
+		end,	
+		ViewScript = function()
+			Enviorment.AppSignal:Fire("ScriptViewer",Explorer.selection.List[1])
+		end,	
+		SelectCharacter = function()
+			for _,plr : Player in Explorer.selection.List do
+				local node = Explorer.GetNodeFromInstance(plr)
+				if plr.Character == nil then continue end
+				for _, parent in Functions.ReverseTable(Functions.GetAncestors(plr.Character)) do
+					local node2 = Explorer.GetNodeFromInstance(parent)
+					if node2 then
+						Explorer.ExpandNode(node2)
+					end
+					task.wait(0.1)
+					Explorer.Refresh()
+				end
+				task.wait(0.1)
+				Explorer.Refresh()
+				local node2 = Explorer.GetNodeFromInstance(plr.Character)
+				if node2 then
+					node2.Selected = true
+				end
+
+				node.Selected = false
+			end
+		end,	
+	}
+	
+	local uis : UserSettings = Enviorment.UIS
+	uis.InputBegan:Connect(function(input, gameProcessed)
+		if Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.Z then ContextFunctions.Cut() end
+		if Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.C then ContextFunctions.Copy() end
+		if Enviorment.IsCtrlDown() and Enviorment.IsShiftDown() and input.KeyCode == Enum.KeyCode.V then ContextFunctions.Paste() end
+		if Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.D then ContextFunctions.Duplicate() end
+		if input.KeyCode == Enum.KeyCode.Delete then ContextFunctions.Delete() end
+		if input.KeyCode == Enum.KeyCode.F2 then ContextFunctions.Rename() end
+		if Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.G then ContextFunctions.Group() end
+		if Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.U then ContextFunctions.Ungroup() end
+		if Enviorment.IsShiftDown() and Enviorment.IsCtrlDown() and input.KeyCode == Enum.KeyCode.X then SearchBox:CaptureFocus() end
+	end)
+	
+	context:Register("CUT", {
+		Name = "Cut",
+		IconMap = module.MiscIcons,
+		Icon = "Cut",
+		DisabledIcon = "Cut_Disabled",
+		Shortcut = "Ctrl+Z",
+		OnClick = function()
+			ContextFunctions.Cut()
+		end,
+	})
+
+	context:Register("COPY", {
+		Name = "Copy",
+		IconMap = module.MiscIcons,
+		Icon = "Copy",
+		DisabledIcon = "Copy_Disabled",
+		Shortcut = "Ctrl+C",
+		OnClick = function()
+			ContextFunctions.Copy()
+		end,
+	})
+
+	context:Register("PASTE", {
+		Name = "Paste Into",
+		IconMap = module.MiscIcons,
+		Icon = "Paste",
+		DisabledIcon = "Paste_Disabled",
+		Shortcut = "Ctrl+Shift+V",
+		OnClick = function()
+			ContextFunctions.Paste()
+		end,
+	})
+
+	context:Register("DUPLICATE", {
+		Name = "Duplicate",
+		IconMap = module.MiscIcons,
+		Icon = "Copy",
+		DisabledIcon = "Copy_Disabled",
+		Shortcut = "Ctrl+D",
+		OnClick = function()
+			ContextFunctions.Duplicate()
+		end,
+	})
+
+	context:Register("DELETE", {
+		Name = "Delete",
+		IconMap = module.MiscIcons,
+		Icon = "Delete",
+		DisabledIcon = "Delete_Disabled",
+		Shortcut = "Del",
+		OnClick = function()
+			ContextFunctions.Delete()
+		end,
+	})
+
+	context:Register("RENAME", {
+		Name = "Rename",
+		IconMap = module.MiscIcons,
+		Icon = "Rename",
+		DisabledIcon = "Rename_Disabled",
+		Shortcut = "F2",
+		OnClick = function()
+			ContextFunctions.Rename()
+			
+		end,
+	})
+
+	context:Register("GROUP", {
+		Name = "Group",
+		IconMap = module.MiscIcons,
+		Icon = "Group",
+		DisabledIcon = "Group_Disabled",
+		Shortcut = "Ctrl+G",
+		OnClick = function()
+			ContextFunctions.Group()
+
+		end,
+	})
+
+	context:Register("UNGROUP", {
+		Name = "Ungroup",
+		IconMap = module.MiscIcons,
+		Icon = "Ungroup",
+		DisabledIcon = "Ungroup_Disabled",
+		Shortcut = "Ctrl+U",
+		OnClick = function()
+			ContextFunctions.Ungroup()
+
+		end,
+	})
+
+	context:Register("SELECT_CHILDREN", {
+		Name = "Select Children",
+		IconMap = module.MiscIcons,
+		Icon = "SelectChildren",
+		DisabledIcon = "SelectChildren_Disabled",
+		OnClick = function()
+			--for _,node in Explorer.GetNodes() do if node == nil then continue end;node.Selected = false end
+			ContextFunctions.Select_Children()
+		end,
+	})
+	context:Register("SELECT_DESCENDANTS", {
+		Name = "Select Descendants",
+		IconMap = module.MiscIcons,
+		Icon = "SelectChildren",
+		DisabledIcon = "SelectChildren_Disabled",
+		OnClick = function()
+			ContextFunctions.Select_Descendants()
+		end,
+	})
+	context:Register("JUMP_TO_PARENT", {
+		Name = "Jump to Parent",
+		IconMap = module.MiscIcons,
+		Icon = "JumpToParent",
+		OnClick = function()
+			ContextFunctions.Jump_To_Parent()
+		end,
+	})
+
+	context:Register("TELEPORT_TO", {
+		Name = "Teleport To",
+		IconMap = module.MiscIcons,
+		Icon = "TeleportTo",
+		OnClick = function()
+			ContextFunctions.TeleportTo()
+		end,
+	})
+
+	context:Register("EXPAND_ALL", {
+		Name = "Expand All",
+		OnClick = function()
+			ContextFunctions.ExpandAll()
+		end,
+	})
+
+	context:Register("COLLAPSE_ALL", {
+		Name = "Collapse All",
+		OnClick = function()
+			ContextFunctions.CollapseAll()
+		end,
+	})
+
+	context:Register("CLEAR_SEARCH_AND_JUMP_TO", {
+		Name = "Clear Search and Jump to",
+		OnClick = function()
+			ContextFunctions.Clear_Search_And_Jump_To()
+		end,
+	})
+
+	context:Register("COPY_PATH", {
+		Name = "Copy Path",
+		OnClick = function()
+			ContextMenu.CopyPath()
+		end,
 	})
 
 	context:Register("INSERT_OBJECT", {
@@ -12461,10 +12756,7 @@ module.NewExplorer = function()
 		IconMap = module.MiscIcons,
 		Icon = "InsertObject",
 		OnClick = function()
-			local mouse = Enviorment.LocalPlayer:GetMouse()
-			local x = module.LastX or mouse.X
-			local y = module.LastY or mouse.Y
-			Explorer.InsertObjectContext:Show(x, y)
+			ContextFunctions.InsertObject()
 		end,
 	})
 
@@ -12472,9 +12764,7 @@ module.NewExplorer = function()
 		"CALL_FUNCTION",
 		{ Name = "Call Function", IconMap = module.ClassIcons, Icon = 66, OnClick = 
 			function() 
-				module.InitCallFunction(Explorer)
-				local mouse = Enviorment.LocalPlayer:GetMouse()
-				Explorer.CallFunctionContext:Show(module.LastX or mouse.X,module.LastY or mouse.Y)
+				ContextFunctions.CallFunction()
 			end }
 	)
 
@@ -12487,28 +12777,7 @@ module.NewExplorer = function()
 		"SAVE_INST",
 		{ Name = "Save to File", IconMap = module.MiscIcons, Icon = "Save", OnClick = 
 			function()
-				local passed = false
-				module.SaveInstance:Show()
-				module.SaveInstance:SetText(game.Name .. "rbxl")
-				
-				module.SaveInstance.OnSave:Connect(function(text)
-					if passed then return end
-					passed = true
-					Enviorment.Functions.saveinstance({
-						SafeMode = false,
-						SaveBytecode = true,
-						ExtraInstances = table.clone(Explorer.selection.List),
-						mode = "invalid",
-						__DEBUG_MODE = true,
-						FileName = text,
-						FilePath = text,
-					})
-					
-				end)
-				module.SaveInstance.OnCancel:Connect(function()
-					if passed then return end
-					passed = true
-				end)
+				ContextFunctions.SaveToFile()
 			end }
 	)
 
@@ -12524,15 +12793,7 @@ module.NewExplorer = function()
 		IconMap = module.ClassIcons,
 		Icon = 5,
 		OnClick = function()
-			local sList = selection.List
-
-			for i = 1, #sList do
-				local node = sList[i]
-
-				if node.Obj:IsA("BasePart") or node.Obj:IsA("Model") then
-					ObjectViewer.ViewObject(node.Obj)
-				end
-			end
+			ContextFunctions.ViewObject()
 		end,
 	})
 
@@ -12541,7 +12802,7 @@ module.NewExplorer = function()
 		IconMap = module.MiscIcons,
 		Icon = "ViewScript",
 		OnClick = function()
-			Enviorment.AppSignal:Fire("ScriptViewer",Explorer.selection.List[1])
+			ContextFunctions.ViewScript()
 		end,
 	})
 
@@ -12562,26 +12823,7 @@ module.NewExplorer = function()
 		IconMap = module.ClassIcons,
 		Icon = 9,
 		OnClick = function()
-			for _,plr : Player in Explorer.selection.List do
-				local node = Explorer.GetNodeFromInstance(plr)
-				if plr.Character == nil then continue end
-				for _, parent in Functions.ReverseTable(Functions.GetAncestors(plr.Character)) do
-					local node2 = Explorer.GetNodeFromInstance(parent)
-					if node2 then
-						Explorer.ExpandNode(node2)
-					end
-					task.wait(0.1)
-					Explorer.Refresh()
-				end
-				task.wait(0.1)
-				Explorer.Refresh()
-				local node2 = Explorer.GetNodeFromInstance(plr.Character)
-				if node2 then
-					node2.Selected = true
-				end
-				
-				node.Selected = false
-			end
+			ContextFunctions.SelectCharacter()
 			--Explorer.ViewObject()
 			
 		end,
@@ -12630,47 +12872,14 @@ return module
 
 end;
 };
-G2L_MODULES[G2L["25"]] = {
+G2L_MODULES[G2L["26"]] = {
 Closure = function()
-    local script = G2L["25"];local Enviorment = require(script.Parent.Parent.Modules.Enviorment)()
+    local script = G2L["26"];local Enviorment = require(script.Parent.Parent.Modules.Enviorment)()
 local SSI = require(script.Parent.Parent.UI.Normal.SSI)
 local SaveInstanceWindow = SSI.new()
 local module = {}
 
-module.CloseButton = function()
-	local n : TextButton = create({{
-		1,
-		"TextButton",
-		{
-			AutoButtonColor = false,
-			BackgroundColor3 = Enviorment.Settings.Theme.Menu,
-			BackgroundTransparency = 1,
-			BorderSizePixel = 0,
-			Font = 3,
-			Name = "Close",
-			Parent = { 5 },
-			Position = UDim2.new(1, -18, 0, 2),
-			Size = UDim2.new(0, 16, 0, 16),
-			Text = "",
-			TextColor3 = Color3.new(1, 1, 1),
-			TextSize = 14,
-		},
-	},
-		{
-			2,
-			"ImageLabel",
-			{
-				BackgroundColor3 = Color3.new(1, 1, 1),
-				BackgroundTransparency = 1,
-				Image = "rbxassetid://5054663650",
-				Parent = { 1 },
-				Position = UDim2.new(0, 3, 0, 3),
-				Size = UDim2.new(0, 10, 0, 10),
-			},
-		},})
-	return n
-end
-
+module.CloseButton = Enviorment.CloseButton
 module.NewTab = function()
 	local new;
 	local elems = {}
@@ -12907,9 +13116,9 @@ end
 return module
 end;
 };
-G2L_MODULES[G2L["26"]] = {
+G2L_MODULES[G2L["27"]] = {
 Closure = function()
-    local script = G2L["26"];local Enviorment = require(script.Parent.Parent.Modules.Enviorment)()
+    local script = G2L["27"];local Enviorment = require(script.Parent.Parent.Modules.Enviorment)()
 local Window = require(script.Parent.Parent.UI.Normal.Window)
 local Label = require(script.Parent.Parent.UI.Base.Label)
 local Button = require(script.Parent.Parent.UI.Base.Button)
@@ -13223,7 +13432,7 @@ module.MakeNode = function(Properties,index)
 	
 	local function f1(ex)
 		for _, v in new.ValueFrame:GetChildren() do
-			if table.find({"SettingsButton","RightButton","Line"},v.Name) then continue end
+			if table.find({"SettingsButton","RightButton","Line","Delete"},v.Name) then continue end
 			if v == Properties.InputBox then continue end
 			if ex == nil then v.Visible = false end
 			if typeof(ex) == "table" then
@@ -13243,6 +13452,10 @@ module.MakeNode = function(Properties,index)
 	Properties.Connected[index] = true
 	local Connections = {}
 	local checkbox2 = Checkbox.new(1)
+	local delete_button = Enviorment.CloseButton()
+	delete_button.Parent = new.ValueFrame
+	delete_button.Position = UDim2.new(1,-delete_button.AbsoluteSize.X,0,delete_button.Position.Y.Offset)
+	delete_button.Name = "Delete"
 	checkbox2.Gui.Parent = new.ValueFrame
 	module.ExpandHighlight(new.NameFrame.Expand)
 	local function RightButton(txt,vis)
@@ -13350,10 +13563,22 @@ module.MakeNode = function(Properties,index)
 			Properties.Refresh()
 		end)
 		new.RowButton.Visible = false
+		delete_button.Visible = false
 		if node.Button ~= nil then
 			new.RowButton.Visible = true
 			new.RowButton.Text = node.Button.Text or "Button"
+			
 			Connections[#Connections+1] = new.RowButton.Activated:Connect(function() node.Button.Activated:Fire() end)
+			return
+		elseif node.IsTag then
+			delete_button.Visible = true
+			f1(nil)
+			new.NameFrame.PropName.Text = node.Name
+			new.NameFrame.PropName.Font = Enum.Font.SourceSans
+			new.BackgroundColor3 = Enviorment.Settings.Theme.Main2
+			new.NameFrame.Expand.Visible = false
+			Connections[#Connections+1] = delete_button.Activated:Connect(function() node.TagSignal:Fire() end)
+			new.ValueFrame.Visible = true
 			return
 		elseif node.RowText ~= nil then
 			new.Visible = true
@@ -13637,6 +13862,7 @@ module.New = function()
 	Properties.MakeVisibleContent = {}
 	Properties.Connected = {}
 	Properties.ActiveNodes = {}
+	Properties.TagEditor = module.NewTagEditor(Properties)
 	Properties.RegisterCallback = function(f,entry)
 		if entry then
 			local idx = #Properties.Refresh_Callbacks+1
@@ -13770,6 +13996,9 @@ module.New = function()
 		local x = 0
 		local function OnNode(node)
 			if node == nil then
+				return
+			end
+			if typeof(node) ~= "table" then
 				return
 			end
 			x = x + 1
@@ -13998,6 +14227,8 @@ module.New = function()
 				return data.Object[data.Property]
 			end,
 			IsAttribute = data.IsAttribute,
+			IsTag = data.IsTag,
+			TagSignal = data.TagSignal,
 			Category = data.IsCategory ~= true and data.Category,
 			IsCategory = data.IsCategory,
 			IsButton = data.IsButton,
@@ -14040,13 +14271,14 @@ module.New = function()
 			node.Category = nil
 			--node.Name = nil
 		end
-		if data.IsButton then
+		if data.IsButton or data.IsTag then
 			node.GetValue = function() return "" end
 			node.SetValue = function() return end
-			node.Writable = function() return false end
+			node.Writable = function() return data.IsTag == true and true or false end
 			node.ForceVisible = true
 			node.Category = nil
 		end
+		
 		if Properties.ExpandableTypes[typeof(node.GetValue())] then
 			for i,subprop in Properties.ExpandableTypes[typeof(node.GetValue())] do
 				local subnode = Properties.AddNode(node,subprop,true,i)
@@ -14080,43 +14312,64 @@ module.New = function()
 		end
 		Properties.Refresh()
 	end
-	
-	Properties.ShowObjectProperties = function(obj : Instance)
-		Properties.ClearNodes()
-		for _, v in Properties.Connections do
-			pcall(function() v:Disconnect() end)
-		end
-		for _, category in Properties.GetProperies_Sorted(obj) do
-			Properties.AddProperty({
-				Object = obj,
-				IsCategory = true,
-				Property = category.Category,
-				NoRefresh = true,
-			})
-			for _,prop in category.props do
-				Properties.AddProperty({
-					Object = obj,
-					Property = prop,
-					Category = category.Category,
-					AutoAdd = true,
-					NoRefresh = true,
-				})
+	Properties.ClearNonProperties = function()
+		for index,node in Properties.Node_List do
+			if node.IsAttribute or node.IsTag or (node.IsCategory == true and node.RowText == "Attributes") or (node.IsCategory == true and node.RowText == "Tags") or (node.IsButton) or node.Button ~= nil then
+				Properties.Node_List[index] = nil
+				task.wait()
 			end
 		end
-		Properties.AddProperty({
+	end
+	Properties.SConnections = {}
+	Properties.ShowObjectNonProperties = function(obj)
+		Properties.DisplayedObjects = {obj}
+		Properties.ClearNonProperties()
+		for _, v in Properties.SConnections do
+			pcall(function() v:Disconnect() end)
+		end
+		local add_in_order = {}
+		add_in_order[#add_in_order+1] = Properties.AddProperty({
+			Object = obj,
+			IsCategory = true,
+			Property = "Tags",
+			NoRefresh = true,
+			AutoAdd = false,
+		})
+		local before_tags = obj:GetTags()
+		for i, tag in before_tags do
+			local n = Properties.AddProperty({
+				Object = obj,
+				IsCategory = false,
+				Property = tag,
+				Category = "Tags",
+				AutoAdd = false,
+				NoRefresh = true,
+				IsAttribute = false,
+				IsTag = true,
+				TagSignal = Signal.new()
+			})
+			add_in_order[#add_in_order+1] = n
+			Properties.SConnections[#Properties.SConnections+1] = n.TagSignal:Connect(function()
+				obj:RemoveTag(tag)
+				Properties.ShowObjectNonProperties(obj)
+			end)
+		end
+		add_in_order[#add_in_order+1] = Properties.AddProperty({
 			Object = obj,
 			IsCategory = true,
 			Property = "Attributes",
 			NoRefresh = true,
+			AutoAdd = false,
 		})
 		local before = obj:GetAttributes()
+		
 		for attribute, value in before do
-			Properties.AddProperty({
+			add_in_order[#add_in_order+1] = Properties.AddProperty({
 				Object = obj,
 				IsCategory = false,
 				Property = attribute,
 				Category = "Attributes",
-				AutoAdd = true,
+				AutoAdd = false,
 				NoRefresh = true,
 				IsAttribute = true,
 			})
@@ -14126,21 +14379,39 @@ module.New = function()
 			Text = "Add Attribute",
 			Activated = Signal.new(),
 		}
-		Properties.AddProperty({
+		local EditorButton = {
+			Text = "Add Tag",
+			Activated = Signal.new(),
+		}
+		add_in_order[#add_in_order+1] = Properties.AddProperty({
 			Object = obj,
 			IsCategory = false,
 			Property = "",
 			Category = "",
-			AutoAdd = true,
+			AutoAdd = false,
 			NoRefresh = true,
 			Button = Button,
 			IsButton = true,
 		})
-		local Button_node = Properties.Node_List[#Properties.Node_List]
-		Properties.Connections[#Properties.Connections+1] = Button.Activated:Connect(function()
+		add_in_order[#add_in_order+1] = Properties.AddProperty({
+			Object = obj,
+			IsCategory = false,
+			Property = "",
+			Category = "",
+			AutoAdd = false,
+			NoRefresh = true,
+			Button = EditorButton,
+			IsButton = true,
+		})
+		local Button_node = add_in_order[#add_in_order+1]
+		local EditorButton_node = add_in_order[#add_in_order]
+		Properties.SConnections[#Properties.SConnections+1] = Button.Activated:Connect(function()
 			Properties.DisplayAddAttributeWindow(Properties.DisplayedObjects)
 		end)
-		Properties.Connections[#Properties.Connections+1] = obj.AttributeChanged:Connect(function(attribute)
+		Properties.SConnections[#Properties.SConnections+1] = EditorButton.Activated:Connect(function()
+			Properties.DisplayAddAttributeWindow(Properties.DisplayedObjects,nil,true)
+		end)
+		Properties.SConnections[#Properties.SConnections+1] = obj.AttributeChanged:Connect(function(attribute)
 			if obj:GetAttribute(attribute) == nil then
 				for i, node in Properties.Node_List do
 					if node.Name == attribute and node.IsAttribute == true and node.Button == nil then
@@ -14161,11 +14432,68 @@ module.New = function()
 					IsAttribute = true,
 				})
 				Properties.Node_List[#Properties.Node_List] = new_node
-				Properties.Node_List[#Properties.Node_List+1] = Button_node
+				for i, v in Properties.Node_List do
+					if v == Button_node then
+						Properties.Node_List[i] = nil
+					end
+					if v == EditorButton_node then
+						Properties.Node_List[i] = nil
+						task.wait()
+					end
+				end
+				
+				
+				--Properties.Node_List[table.find(Properties.Node_List,Button_node)] = nil
+				
 				before = obj:GetAttributes()
 				Properties.Refresh()
+				task.spawn(function()
+					task.wait(0.1)
+					Properties.ShowObjectNonProperties(obj)
+				end)
 			end
 		end)
+		Properties.SConnections[#Properties.SConnections+1] = Enviorment.RunService.Heartbeat:Connect(function()
+			local new = obj:GetTags()
+			for i,v in new do
+				if not table.find(before_tags,v) then
+					before_tags = new
+					Properties.ShowObjectNonProperties(obj)
+					return
+				end
+			end
+		end)
+		for _, v in add_in_order do 
+			Properties.Node_List[#Properties.Node_List+1] = v
+		end
+	end
+	Properties.ShowObjectProperties = function(obj : Instance)
+		Properties.ClearNodes()
+		Properties.TagEditor.AddObjectProperties(obj)
+		for _, v in Properties.Connections do
+			pcall(function() v:Disconnect() end)
+		end
+		for _, category in Properties.GetProperies_Sorted(obj) do
+			Properties.AddProperty({
+				Object = obj,
+				IsCategory = true,
+				Property = category.Category,
+				NoRefresh = true,
+			})
+			for _,prop in category.props do
+				Properties.AddProperty({
+					Object = obj,
+					Property = prop,
+					Category = category.Category,
+					AutoAdd = true,
+					NoRefresh = true,
+				})
+			end
+		end
+		
+		Properties.ShowObjectNonProperties(obj)
+		
+		
 		Properties.Refresh()
 	end
 	Properties.ShowExplorerProps = function(objects)
@@ -14207,7 +14535,7 @@ module.New = function()
 		end
 	end
 	
-	Properties.DisplayAddAttributeWindow = function(objects,attribute)
+	Properties.DisplayAddAttributeWindow = function(objects,attribute,is_tag)
 		local win = Properties.AddAttributeWindow
 		if not win then
 			win = Window.new()
@@ -14266,24 +14594,30 @@ module.New = function()
 			saveButton.Gui.Size = UDim2.new(0,92,0,20)
 			saveButton.OnClick:Connect(function()
 				local name = nameBox:GetText()
-				if #name > 100 then
-					errorLabel.Text = "Error: Name over 100 chars"
-					return
-				elseif name:sub(1,3) == "RBX" and not Enviorment.IsElevated() then
-					errorLabel.Text = "Error: Name begins with 'RBX'"
-					return
-				end
-
-				local typ = typeChooser.Selected
-				if attribute then
-					for _, obj in objects do
-						local _,val = pcall(obj.GetAttribute,obj,attribute)
-						pcall(obj.SetAttribute,obj,attribute,nil)
-						pcall(obj.SetAttribute,obj,nameBox.TextBox.Text,val)
+				if is_tag then
+					for _,obj in objects do
+						pcall(obj.AddTag,obj,name)
 					end
 				else
-					for _, obj in objects do
-						pcall(obj.SetAttribute,obj,nameBox.TextBox.Text,Properties.DefaultPropValue[typ])
+					if #name > 100 then
+						errorLabel.Text = "Error: Name over 100 chars"
+						return
+					elseif name:sub(1,3) == "RBX" and not Enviorment.IsElevated() then
+						errorLabel.Text = "Error: Name begins with 'RBX'"
+						return
+					end
+
+					local typ = typeChooser.Selected
+					if attribute then
+						for _, obj in objects do
+							local _,val = pcall(obj.GetAttribute,obj,attribute)
+							pcall(obj.SetAttribute,obj,attribute,nil)
+							pcall(obj.SetAttribute,obj,nameBox.TextBox.Text,val)
+						end
+					else
+						for _, obj in objects do
+							pcall(obj.SetAttribute,obj,nameBox.TextBox.Text,Properties.DefaultPropValue[typ])
+						end
 					end
 				end
 				
@@ -14297,7 +14631,7 @@ module.New = function()
 			Properties.AddAttributeWindow = win
 		end
 
-		win:SetTitle(attribute ~= nil and "Edit Attribute " .. attribute or "Add Attribute")
+		if is_tag then win:SetTitle("Add Tag") else win:SetTitle(attribute ~= nil and "Edit Attribute " .. attribute or "Add Attribute") end
 		win.Elements.Error.Text = ""
 		win.Elements.NameBox:SetText("")
 		win.Elements.SaveButton:SetDisabled(true)
@@ -14548,11 +14882,12 @@ module.New = function()
 			if Properties.ScrollY.Index ~= OldYOffset then
 				OldYOffset = Properties.ScrollY.Index
 				Properties.YOffset = OldYOffset
+				Properties.ScrollY.TotalSpace = Properties.GetLenght()
 				Properties.InputTextBox:ReleaseFocus()
 				Properties.Refresh(true)
 			end
 			Properties.ScrollY.VisibleSpace = math.round(Properties.Window.GuiElems.Content.AbsoluteSize.Y / 20) - 10
-			Properties.ScrollY.TotalSpace = Properties.GetLenght()
+			
 			local index = 0
 			for _, new in Properties.NodeContent:GetChildren() do
 				if new.Visible == false then
@@ -14573,15 +14908,106 @@ module.New = function()
 	end)
 	return Properties
 end
+module.NewTagEditor = function(Properties)
+	local sub_module = {}
+	sub_module.YOffset = 0
+	sub_module.Node_List = {}
+	sub_module.Window = Window.new()
+	sub_module.Window.SetTitle(sub_module.Window,"Tag Editor")
+	sub_module.Window.Resizable = false
+	
+	sub_module.UpdateFunctions = {}
+	sub_module.GetAtIndex = function(index,nooffset) local final = nooffset == true and index or index + sub_module.YOffset ;return sub_module.Node_List[final] end
+	sub_module.MakeNode = function(i)
+		local new = module.NewEntryTemplate()
+		local delete_button = Enviorment.CloseButton()
+		delete_button.Parent = new.ValueFrame
+		delete_button.Position = UDim2.new(1,-delete_button.AbsoluteSize.X,0,delete_button.Position.Y.Offset)
+		delete_button.Name = "Delete"
+		local function f1(ex)
+			for _, v in new.ValueFrame:GetChildren() do
+				if table.find({"SettingsButton","RightButton","Line","Delete"},v.Name) then continue end
+				if v == Properties.InputBox then continue end
+				if ex == nil then v.Visible = false end
+				if typeof(ex) == "table" then
+					if table.find(ex,v) then
+						v.Visible = true
+					else
+						v.Visible = false
+					end
+					continue
+				end
+				if v ~= ex then v.Visible = false;continue end
 
+
+				v.Visible = true
+			end
+		end
+		f1(nil)
+		new.ValueFrame.Visible = true
+		local connections = {}
+		sub_module[#sub_module+1] = function()
+			for _,v in connections do
+				pcall(function()
+					connections:Disconnect()
+				end)
+			end
+			local node = sub_module.GetAtIndex(i)
+			if node == nil then
+				new.Visible = false
+				return
+			end
+			new.NameFrame.Expand.Visible = false
+			new.NameFrame.PropName.Text = node.Name;
+			connections[#connections+1] = delete_button.Activated:Connect(function()
+				node.Object:RemoveTag(node.Name)
+			end)
+		end
+		new.Parent = sub_module.Window.GuiElems.Content
+		new.Position = UDim2.new(0,0,0,20 * (i-1))
+		
+	end
+	sub_module.Clear = function() sub_module.Node_List = {} end
+	sub_module.Refresh = function(instant) 
+		for _, v in sub_module.UpdateFunctions do 
+			if instant then 
+				task.spawn(v)
+			else 
+				v()
+			end 
+		end 
+	end
+	sub_module.AddProperty = function(data)
+		local new = {
+			Object = data.Object,
+			Name = data.Name,
+		}
+		if data.AutomaticAdd ~= false then
+			sub_module.Node_List[#sub_module.Node_List+1] = new
+		end
+		sub_module.Refresh()
+	end
+	sub_module.RemakeEntries = function()
+		for i=1,15 do sub_module.MakeNode(i) end
+	end
+	sub_module.AddObjectProperties = function(object : Instance)
+		sub_module.Clear()
+		for _, tag in object:GetTags() do
+			sub_module.AddProperty({Object = object,Name = tag,Tag = tag})
+		end
+		sub_module.Clear()
+	end
+	sub_module.RemakeEntries()
+	return sub_module
+end
 module.Init = module.New
 return module
 
 end;
 };
-G2L_MODULES[G2L["27"]] = {
+G2L_MODULES[G2L["28"]] = {
 Closure = function()
-    local script = G2L["27"];--[[
+    local script = G2L["28"];--[[
 	Console Module
 ]]
 
@@ -14626,7 +15052,7 @@ module.New = function()
 	G2L["3"] = Frame.new().Gui--Instance.new("Frame", ConsoleFrame);
 	G2L["3"].Parent = ConsoleFrame
 	G2L["3"]["BorderSizePixel"] = 0;
-	G2L["3"]["BackgroundColor3"] = Color3.fromRGB(37, 37, 37);
+	G2L["3"]["BackgroundColor3"] = Enviorment.Settings.Theme.Main3;
 	G2L["3"]["AnchorPoint"] = Vector2.new(0.5, 1);
 	G2L["3"]["ClipsDescendants"] = true;
 	G2L["3"]["Size"] = UDim2.new(1, -8, 0, 22);
@@ -15357,6 +15783,290 @@ module.Init = module.New
 return module 
 end;
 };
+G2L_MODULES[G2L["29"]] = {
+Closure = function()
+    local script = G2L["29"];--[[
+	Save Instance App Module
+	
+	Revival of the old dex's Save Instance
+]] 
+local Enviorment = require(script.Parent.Parent.Modules.Enviorment)()
+local Label = require(script.Parent.Parent.UI.Base.Label)
+local Checkbox = require(script.Parent.Parent.UI.Base.Checkbox)
+local Frame = require(script.Parent.Parent.UI.Base.Frame)
+local Window = require(script.Parent.Parent.UI.Normal.Window)
+local ViewportTextBox = require(script.Parent.Parent.UI.Base.ViewportTextBox)
+local ScrollBar = require(script.Parent.Parent.UI.Normal.ScrollBar)
+local module = {}
 
--- Load the loader
-G2L_REQUIRE(G2L["2"]).Init()
+module.New = function()
+	local SaveInstance = {}
+	local new = {}
+	local window, ListFrame
+	local placeName = "Place_"..game.PlaceId
+	pcall(function() placeName = Enviorment.MarketplaceService:GetProductInfo(game.PlaceId).Name end)
+	local fileName = placeName .. "_{TIMESTAMP}"
+	local Saving = false
+
+	local SaveInstanceArgs = {
+		Decompile = true,
+		DecompileTimeout = 10,
+		DecompileIgnore = {"Chat", "CoreGui", "CorePackages"},
+		NilInstances = false,
+		RemovePlayerCharacters = true,
+		SavePlayers = false,
+		MaxThreads = 3,
+		ShowStatus = true,
+		IgnoreDefaultProps = true,
+		IsolateStarterPlayer = true
+	}
+
+	local function AddCheckbox(title, default)
+		local frame = Frame.new()
+		frame.Gui.Parent = ListFrame
+		frame.Gui.Transparency = 1
+		frame.Gui.Size = UDim2.new(1,0,0,20)
+
+		local listlayout = Instance.new("UIListLayout")
+		listlayout.Parent = frame.Gui
+		listlayout.FillDirection = Enum.FillDirection.Horizontal
+		listlayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+		listlayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		listlayout.Padding = UDim.new(0, 10)
+
+		-- Checkbox
+		local checkbox = Checkbox.new()
+
+		checkbox.Gui.Parent = frame.Gui
+		checkbox.Gui.Size = UDim2.new(0,15,0,15)
+
+		-- Label
+		local label = Label.new()
+
+		label.Parent = frame.Gui
+		label.Size = UDim2.new(1, 0,1, -15)
+		label.Text = title
+		label.TextTruncate = Enum.TextTruncate.AtEnd
+
+		checkbox:SetState(default)
+
+		return checkbox
+	end
+
+	local function AddTextbox(title, default, sizeX)
+		default = tostring(default)
+		local frame = Frame.new()
+		frame.Gui.Parent = ListFrame
+		frame.Gui.Transparency = 1
+		frame.Gui.Size = UDim2.new(1,0,0,20)
+
+		local listlayout = Instance.new("UIListLayout")
+		listlayout.Parent = frame.Gui
+		listlayout.FillDirection = Enum.FillDirection.Horizontal
+		listlayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+		listlayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		listlayout.Padding = UDim.new(0, 10)
+
+		-- Textbox
+		local textbox = Instance.new("TextBox") -- replaced cuz why Moon make every inputs only work on mouse/pc users >:( 
+		textbox.BackgroundColor3 = Enviorment.Settings.Theme.TextBox
+		textbox.BorderColor3 = Enviorment.Settings.Theme.Outline3
+		textbox.ClearTextOnFocus = false
+		textbox.TextColor3 = Enviorment.Settings.Theme.Text
+		textbox.Font = Enum.Font.SourceSans
+		textbox.TextSize = 14
+		textbox.ZIndex = 2
+
+		textbox.Parent = frame.Gui
+		if sizeX and type(sizeX) == "number" then
+			textbox.Size = UDim2.new(0,sizeX,0,15)
+		else
+			textbox.Size = UDim2.new(0,45,0,15)
+		end
+
+		frame.Gui.AutomaticSize = Enum.AutomaticSize.X
+		textbox.AutomaticSize = Enum.AutomaticSize.X
+
+		-- Label
+		local label = Label.new()
+
+		label.Parent = frame.Gui
+		label.Size = UDim2.new(1, 0,1, -15)
+		label.Text = title
+		label.TextTruncate = Enum.TextTruncate.AtEnd
+
+		textbox.Text = default
+
+		return {TextBox = textbox}
+	end
+
+	SaveInstance.Init = function()
+		window = Window.new()
+		window:SetTitle("Save Instance")
+		window:Resize(350,350)
+		SaveInstance.Window = window
+
+		-- ListFrame
+
+		-- Fake ScrollBar dex, because its too advanced
+		ListFrame = Instance.new("ScrollingFrame")
+		ListFrame.Parent = window.GuiElems.Content
+		ListFrame.Size = UDim2.new(1, 0,1, -40)
+		ListFrame.Position = UDim2.new(0, 0, 0, 0)
+		ListFrame.Transparency = 1
+		ListFrame.CanvasSize = UDim2.new(0,0,0,0)
+		ListFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		ListFrame.ScrollBarThickness = 16
+		ListFrame.BottomImage = ""
+		ListFrame.TopImage = ""
+		ListFrame.ScrollBarImageColor3 = Color3.fromRGB(70, 70, 70)
+		ListFrame.ScrollBarImageTransparency = 0
+		ListFrame.ZIndex = 2
+		ListFrame.BorderSizePixel = 0
+
+		local scrollbar = ScrollBar.new()
+		scrollbar.Gui.Parent = window.GuiElems.Content
+		scrollbar.Gui.Size = UDim2.new(1, 0,1, -40)
+		scrollbar.Gui.Up.ZIndex = 3
+		scrollbar.Gui.Down.ZIndex = 3
+
+		ListFrame:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(function()
+			if ListFrame.AbsoluteCanvasSize ~= ListFrame.AbsoluteWindowSize then
+				scrollbar.Gui.Visible = true
+			else
+				scrollbar.Gui.Visible = false
+			end
+		end)
+
+		local ListLayout = Instance.new("UIListLayout")
+		ListLayout.Parent = ListFrame
+		ListLayout.Padding = UDim.new(0, 5)
+
+		local Padding = Instance.new("UIPadding")
+		Padding.Parent = ListFrame
+		Padding.PaddingBottom = UDim.new(0, 5)
+		Padding.PaddingLeft = UDim.new(0, 10)
+		Padding.PaddingRight = UDim.new(0, 10)
+		Padding.PaddingTop = UDim.new(0, 5)
+
+		-- Options
+
+		local Decompile = AddCheckbox("Decompile Scripts (LocalScript and ModuleScript)", SaveInstanceArgs.Decompile)
+		Decompile.OnInput:Connect(function()
+			SaveInstanceArgs.Decompile = Decompile.Toggled
+		end)
+
+		local decompileTimeout = AddTextbox("Decompile Timeout (s)", SaveInstanceArgs.DecompileTimeout, 15)
+		decompileTimeout.TextBox.FocusLost:Connect(function()
+			SaveInstanceArgs.DecompileTimeout = tonumber(decompileTimeout.TextBox.Text)
+		end)
+
+		local decompileThread = AddTextbox("Decompiler Max Threads", "3", 15)
+		decompileThread.TextBox.FocusLost:Connect(function()
+			SaveInstanceArgs.MaxThreads = tonumber(decompileThread.TextBox.Text)
+		end)
+
+		local decompileIgnore = AddTextbox("Decompile Ignore", table.concat(SaveInstanceArgs.DecompileIgnore, ","), 50)
+		decompileIgnore.TextBox.FocusLost:Connect(function()
+			local inputText = decompileIgnore.TextBox.Text
+			local rawList = string.split(inputText, ", ") or string.split(inputText, ",")
+			local finalList = {}
+
+			for _, text in ipairs(rawList) do
+				local split = string.split(text, ",") or string.split(text, ", ")
+				for _, textFound in ipairs(split) do
+					table.insert(finalList, textFound)
+				end
+			end
+			SaveInstanceArgs.DecompileIgnore = finalList
+		end)
+
+
+		local NilObj = AddCheckbox("Save Nil Instances", SaveInstanceArgs.NilInstances)
+		NilObj.OnInput:Connect(function()
+			SaveInstanceArgs.NilInstances = NilObj.Toggled
+		end)
+
+		local RemovePlayerChar = AddCheckbox("Remove Player Characters", SaveInstanceArgs.RemovePlayerCharacters)
+		RemovePlayerChar.OnInput:Connect(function()
+			SaveInstanceArgs.RemovePlayerCharacters = RemovePlayerChar.Toggled
+		end)
+
+		local SavePlayerObj = AddCheckbox("Save Player Instance", SaveInstanceArgs.SavePlayers)
+		SavePlayerObj.OnInput:Connect(function()
+			SaveInstanceArgs.SavePlayers = SavePlayerObj.Toggled
+		end)
+
+		local IsolateStarterPlr = AddCheckbox("Isolate StarterPlayer", SaveInstanceArgs.IsolateStarterPlayer)
+		IsolateStarterPlr.OnInput:Connect(function()
+			SaveInstanceArgs.IsolateStarterPlayer = IsolateStarterPlr.Toggled
+		end)
+
+		local IgnoreDefaultProps = AddCheckbox("Ignore Default Properties", SaveInstanceArgs.IgnoreDefaultProps)
+		IgnoreDefaultProps.OnInput:Connect(function()
+			SaveInstanceArgs.IgnoreDefaultProps = IgnoreDefaultProps.Toggled
+		end)
+
+		local ShowStat = AddCheckbox("Show Status", SaveInstanceArgs.ShowStatus)
+		ShowStat.OnInput:Connect(function()
+			SaveInstanceArgs.ShowStatus = ShowStat.Toggled
+		end)
+
+
+		-- Decompile buttons below
+		local FilenameTextBox = ViewportTextBox.new()
+		FilenameTextBox.Gui.Parent = window.GuiElems.Content
+		FilenameTextBox.Size = UDim2.new(1,0, 0,20)
+		FilenameTextBox.Position = UDim2.new(0,0, 1,-40)
+
+		local textpadding = Instance.new("UIPadding")
+		textpadding.Parent = FilenameTextBox.Gui
+		textpadding.PaddingLeft = UDim.new(0, 5)
+		textpadding.PaddingRight = UDim.new(0, 5)
+
+		local BackgroundButton = Frame.new()
+		BackgroundButton.Gui.Parent = window.GuiElems.Content
+		BackgroundButton.Size = UDim2.new(1,0, 0,20)
+		BackgroundButton.Position = UDim2.new(0,0, 1,-20)
+
+		local LabelButton = Label.new()
+		LabelButton.Parent = window.GuiElems.Content
+		LabelButton.Size = UDim2.new(1,0, 0,20)
+		LabelButton.Position = UDim2.new(0,0, 1,-20)
+		LabelButton.Text = "Save"
+		LabelButton.TextXAlignment = Enum.TextXAlignment.Center
+
+		local Button = Instance.new("TextButton")
+		Button.Parent = BackgroundButton.Gui
+		Button.Size = UDim2.new(1,0, 1,0)
+		Button.Position = UDim2.new(0,0, 0,0)
+		Button.Transparency = 1
+
+		FilenameTextBox.TextBox.Text = fileName
+		Button.MouseButton1Click:Connect(function()
+			local fileName = FilenameTextBox.TextBox.Text:gsub("{TIMESTAMP}", os.date("%Y%m%d_%H%M%S"))
+			
+			window:SetTitle("Save Instance - Saving")
+			SaveInstance.FileName = fileName
+			local s, result = pcall(Enviorment.Functions.saveinstance,SaveInstanceArgs)
+			if s then
+				window:SetTitle("Save Instance - Saved")
+			else
+				window:SetTitle("Save Instance - Error")
+				task.spawn(error("Failed to save the game: "..result))
+			end
+			task.wait(5)
+			window:SetTitle("Save Instance")
+			---env.saveinstance(game, fileName, SaveInstanceArgs)
+		end)
+	end
+	SaveInstance.Init()
+	new.Window = window
+	return new
+end
+module.Init = module.New
+return module
+end;
+};
+
+require(G2L["2"]).Init()
