@@ -28,8 +28,8 @@ __index = function(t,k)
 	
 	return rawget(t,k) or module_hidden[k]
 end})
-
-module.Version = "1.0.0"
+--module.ExecutorSupport = require(script.Parent.ExecutorSupport)
+module.Version = "Nightly 2.0.0"
 -- Enviorment Functions
 module.Functions = {}
 module.Functions.org = {
@@ -436,6 +436,40 @@ module.FetchAPI = function(callbackiflong, callbackiftoolong, XD)
 		GetMember = getMember
 	}
 end
+module.CloseButton = function()
+	local n : TextButton = module.create({{
+		1,
+		"TextButton",
+		{
+			AutoButtonColor = false,
+			BackgroundColor3 = module.Settings.Theme.Menu,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Font = 3,
+			Name = "Close",
+			Parent = { 5 },
+			Position = UDim2.new(1, -18, 0, 2),
+			Size = UDim2.new(0, 16, 0, 16),
+			Text = "",
+			TextColor3 = Color3.new(1, 1, 1),
+			TextSize = 14,
+		},
+	},
+		{
+			2,
+			"ImageLabel",
+			{
+				BackgroundColor3 = Color3.new(1, 1, 1),
+				BackgroundTransparency = 1,
+				Image = "rbxassetid://5054663650",
+				Parent = { 1 },
+				Position = UDim2.new(0, 3, 0, 3),
+				Size = UDim2.new(0, 10, 0, 10),
+			},
+		},})
+	return n
+end
+
 module.IsShiftDown = function()
 	return module.UIS:IsKeyDown(Enum.KeyCode.LeftShift)
 		or module.UIS:IsKeyDown(Enum.KeyCode.RightShift)
@@ -683,6 +717,7 @@ module.CheckMouseInGui = function(g)
 	return s == true and r or false
 end
 module.TextService = module.cloneref(game:GetService("TextService"))
+module.MarketplaceService = module.cloneref(game:GetService("MarketplaceService"))
 module.Settings = {
 	Explorer = {
 		_Recurse = true,
@@ -714,6 +749,7 @@ module.Settings = {
 		_Recurse = true,
 		Main1 = Color3.fromRGB(52, 52, 52),
 		Main2 = Color3.fromRGB(45, 45, 45),
+		Main3 = Color3.fromRGB(37,37,37),
 		Outline1 = Color3.fromRGB(33, 33, 33), -- Mainly frames
 		Outline2 = Color3.fromRGB(55, 55, 55), -- Mainly button
 		Outline3 = Color3.fromRGB(30, 30, 30), -- Mainly textbox
