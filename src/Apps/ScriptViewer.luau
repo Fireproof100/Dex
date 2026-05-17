@@ -3,40 +3,7 @@ local SSI = require(script.Parent.Parent.UI.Normal.SSI)
 local SaveInstanceWindow = SSI.new()
 local module = {}
 
-module.CloseButton = function()
-	local n : TextButton = create({{
-		1,
-		"TextButton",
-		{
-			AutoButtonColor = false,
-			BackgroundColor3 = Enviorment.Settings.Theme.Menu,
-			BackgroundTransparency = 1,
-			BorderSizePixel = 0,
-			Font = 3,
-			Name = "Close",
-			Parent = { 5 },
-			Position = UDim2.new(1, -18, 0, 2),
-			Size = UDim2.new(0, 16, 0, 16),
-			Text = "",
-			TextColor3 = Color3.new(1, 1, 1),
-			TextSize = 14,
-		},
-	},
-		{
-			2,
-			"ImageLabel",
-			{
-				BackgroundColor3 = Color3.new(1, 1, 1),
-				BackgroundTransparency = 1,
-				Image = "rbxassetid://5054663650",
-				Parent = { 1 },
-				Position = UDim2.new(0, 3, 0, 3),
-				Size = UDim2.new(0, 10, 0, 10),
-			},
-		},})
-	return n
-end
-
+module.CloseButton = Enviorment.CloseButton
 module.NewTab = function()
 	local new;
 	local elems = {}
