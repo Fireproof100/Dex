@@ -93,8 +93,8 @@ module.Value_To_Luau = function(...)
 			x = "Vector2.new("
 		end
 		local v = typ == "Vector2" and {"X","Y"} or {"X","Y","Z"}
-		for i, v in v do
-			x = x .. value[x]
+		for i, b in v do
+			x = x .. value[b]
 			if i ~= #v then x = x .. ", " else x = x .. ")" end
 		end
 		return value 
