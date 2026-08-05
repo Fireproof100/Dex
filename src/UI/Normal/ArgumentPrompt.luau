@@ -26,7 +26,7 @@ funcs.Show = function(self)
 	self.GuiElems.Window:Show()
 end
 
-static.new = function()
+static.new = function(count)
 	local obj;
 	obj = setmetatable({
 		GuiElems = {},
@@ -37,7 +37,7 @@ static.new = function()
 	obj.GuiElems.Window = w;
 	
 	obj.Window = w;
-	obj.Window.SizeY = obj.Window.SizeY - 40
+	
 	obj.GuiElems.Window:SetTitle('Function Arguments')
 	Instance.new("UIListLayout",obj.GuiElems.Window.GuiElems.Content)
 	local frm = Instance.new("Frame")
@@ -46,7 +46,8 @@ static.new = function()
 	frm.Name = "Indent"
 	frm.BackgroundTransparency = 1
 	--obj.GuiElems.Window.GuiElems.Content.Line:Destroy()
-	for i=1,10 do obj:AddArgument() end
+	for i=1,(count or 10) do obj:AddArgument() end
+	obj.Window:SetSize(obj.Window.SizeX,(obj.Window.SizeY) / 10 * (count or 10)) 
 	obj.GuiElems.Window.Resizable = false
 	
 	
