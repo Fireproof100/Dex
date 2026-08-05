@@ -33,8 +33,9 @@ module.Version = "Nightly 2.0.0"
 -- Enviorment Functions
 module.Functions = {}
 module.Functions.org = {
-	protectgui = protectgui
-	,setclipboard = setclipboard,
+	getloadedmodules = getloadedmodules,
+	protectgui = protectgui,
+	setclipboard = setclipboard,
 	cloneref = cloneref,
 	getnilinstances = getnilinstances,
 	saveinstance = saveinstance,
@@ -47,6 +48,11 @@ module.Functions.org = {
 	oth = oth,
 	hookfunction = hookfunction,
 }
+module.Functions.getloadedmodules = function() 
+	local result = module.Functions.org.getloadedmodules()
+	local supported = #result ~= 0
+	return result,supported
+end
 module.Functions.newcclosure = newcclosure or function(f) return f end
 module.Functions.islclosure = function(f) local l,_ = pcall(setfenv,f,getfenv(f));return l end
 module.Functions.iscclosure = function(f) local l,_ = pcall(setfenv,f,getfenv(f));return not l end
@@ -132,15 +138,19 @@ module.Functions.getnilinstances = function()
 	return {},false
 end
 module.Functions.decompile = function(s)
-	if module.RunService:IsStudio() then
-		local success,source = pcall(function() return s.Source end)
-		if success then
-			return source
-		else
-			return "Unable to get the script's source: " .. tostring(source)
-		end
-	else
+	if module.Functions.org.decompile ~= nil then
 		return module.Functions.org.decompile(s)
+	end
+	if getscriptbytecode == nil then
+		return "-- Missing function 'getscriptbytecode'"
+	else
+		local s, source = pcall(function()
+			return s.Source
+		end) 
+		if not s then
+			source = "-- The current thread cannot read the script's source. "
+		end
+		return source;
 	end
 end
 module.Functions.writefile = function(path, data)
@@ -580,7 +590,7 @@ module.ParseXML = (function() -- from https://github.com/jonathanpoelen/xmlparse
 end)()
 
 module.fn = module
-module.GetAttribute = function(t,v)
+module.GetAttribute = function(t,v) -- i have no idea why this is here
 	return t:GetAttribute(v)
 end
 module.SetAttribute = function(t,v,k)
@@ -716,6 +726,8 @@ module.CheckMouseInGui = function(g)
 	end)
 	return s == true and r or false
 end
+module.CoreGui = module.cloneref(game:GetService("CoreGui")) or Instance.new("Folder")
+module.CorePackages = module.cloneref(game:GetService("CorePackages")) or Instance.new("Folder")
 module.TextService = module.cloneref(game:GetService("TextService"))
 module.MarketplaceService = module.cloneref(game:GetService("MarketplaceService"))
 module.Settings = {
@@ -725,8 +737,9 @@ module.Settings = {
 		TeleportToOffset = Vector3.new(0, 0, 0), -- TODO
 		ClickToRename = true, -- TODO
 		AutoUpdateSearch = true,
+		ShowHidden = false,
 		--AutoUpdateMode = 0, -- 0 Default, 1 no tree update, 2 no descendant events, 3 frozen
-		PartSelectionBox = true, --TODO
+		PartSelectionBox = true,
 		GuiSelectionBox = true, -- TODO
 		--CopyPathUseGetChildren = true,
 	},
@@ -798,6 +811,10 @@ module.Settings = {
 		},
 	},
 }
+for i, setting in module.Settings do
+	setting.Changed = require(script.Parent.Signal).new()
+	module.Settings[i] = setmetatable({},{__index = function(_,k) return setting[k] end,__newindex = function(_,k,v) setting.Changed:Fire(k,v); setting[k] = v end})
+end
 module.AppSignal = require(script.Parent.Signal).new()
 module_hidden.API = module.FetchAPI()
 module_hidden.RMD = module.FetchRMD()
