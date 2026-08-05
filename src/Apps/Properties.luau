@@ -488,7 +488,7 @@ module.MakeNode = function(Properties,index)
 			
 		end
 		new.ValueFrame.ValueBox.BackgroundColor3 = Enviorment.Settings.Theme.Main1
-		new.EditAttributeButton.Visible = node.IsAttribute or false
+		new.EditAttributeButton.Visible = node.IsAttribute--node.IsTag ~= true
 		if not node.Subnodes then
 			new.NameFrame.Expand.Visible = false
 		elseif #node.Subnodes == 0 then
@@ -501,25 +501,34 @@ module.MakeNode = function(Properties,index)
 				return
 			end
 			Properties.AttributeContext:Clear()
+			if node.IsAttribute then
+				Properties.AttributeContext.Add(Properties.AttributeContext,{
+					Name = "Delete",
+					Disabled = false,
+					OnClick = function()
+						if node.IsCategory or node.IsAttribute ~= true or node.Button ~= nil or node.IsButton == true then
+							return
+						end
+						node.SetValue(nil)
+					end
+				})
+				Properties.AttributeContext.Add(Properties.AttributeContext,{
+					Name = "Edit",
+					Disabled = false,
+					OnClick = function()
+						if node.IsCategory or node.IsAttribute ~= true or node.Button ~= nil or node.IsButton == true then
+							return
+						end
+						Properties.DisplayAddAttributeWindow(Properties.DisplayedObjects,node.Name)
+					end
+				})
+			end
 			Properties.AttributeContext.Add(Properties.AttributeContext,{
-				Name = "Delete",
+				Name = "Copy",
 				Disabled = false,
 				OnClick = function()
-					if node.IsCategory or node.IsAttribute ~= true or node.Button ~= nil or node.IsButton == true then
-						return
-					end
-					node.SetValue(nil)
-				end
-			})
-			Properties.AttributeContext.Add(Properties.AttributeContext,{
-				Name = "Edit",
-				Disabled = false,
-				OnClick = function()
-					if node.IsCategory or node.IsAttribute ~= true or node.Button ~= nil or node.IsButton == true then
-						return
-					end
-					Properties.DisplayAddAttributeWindow(Properties.DisplayedObjects,node.Name)
-				end
+					Enviorment.Functions.setclipboard(Functions.Value_To_Luau(node.GetValue()))
+				end,
 			})
 			Properties.AttributeContext.Gui.Parent = new.ValueFrame
 			Properties.AttributeContext.Width = new.ValueFrame.AbsoluteSize.X
@@ -527,7 +536,7 @@ module.MakeNode = function(Properties,index)
 		end)
 		new.ValueFrame.ValueBox.Position = UDim2.new(0,0,0,0)
 		new.ValueFrame.ColorButton.ColorPreview.UIGradient.Enabled = false
-		if table.find({"string","CFrame","Vector3int16","Vector3","Vector2int16","Vector2","Color3","number","SecurityCapabilities","Ray","UDim2","UDim","Rect","Color3","ColorSequence"},type_value) then
+		if table.find({"Faces","Axes","Font","string","CFrame","Vector3int16","Vector3","Vector2int16","Vector2","Color3","number","SecurityCapabilities","Ray","UDim2","UDim","Rect","Color3","ColorSequence"},type_value) then
 			local btn : TextButton = new.ValueFrame.ValueBox
 			if type_value == "Color3" or type_value == "ColorSequence" then
 				f1({btn,new.ValueFrame.ColorButton})
@@ -606,6 +615,12 @@ module.MakeNode = function(Properties,index)
 				Properties.MakeVisibleOnLostFocus(btn)
 				--Connections[i] = 
 			end)
+		elseif type_value == "User" then
+			local btn : TextButton = new.ValueFrame.ValueBox
+			f1(btn)
+			btn.Text = tostring(node.GetValue().Id)
+			new.NameFrame.PropName.TextColor3 = Enviorment.Settings.Theme.PlaceholderText
+			new.ValueFrame.ValueBox.TextColor3 = Enviorment.Settings.Theme.PlaceholderText
 		elseif table.find({"boolean","PhysicalProperties"},type_value) then
 			f1(checkbox2.Gui)
 			
@@ -731,12 +746,13 @@ module.MakeNode = function(Properties,index)
 	Properties.RegisterCallback(Refresh,new)
 end
 
-module.New = function()
+module.New = function(Embedded,AppContainer)
 	local Properties = {ViewWidth = 0,YOffset = 0,SearchText = ""}
 	Properties.Entry_List = {}
 	Properties.Node_List = {}
 	Properties.AllowedAttributeTypes = {"string","boolean","number","UDim","UDim2","BrickColor","Color3","Vector2","Vector3","NumberSequence","ColorSequence","NumberRange","Rect","Font"}
 	Properties.Connections = {}
+	Properties._editingTag = nil
 	Properties.ExpandedCategories = {}
 	Properties.Refresh_Callbacks = {}
 	Properties.MakeVisibleContent = {}
@@ -891,22 +907,24 @@ module.New = function()
 	end
 	Properties.Refresh = function(instant)
 		--local instant = true
-		task.spawn(function()
-			Properties.ScrollY.TotalSpace = #Properties.Node_List * 4
+		
+		Properties.ScrollY.TotalSpace = #Properties.Node_List * 4
 			--Properties.ScrollY:Update()
-		end)
+		
 		
 		for i, f in Properties.Refresh_Callbacks do
 			if Properties.ActiveNodes[i] == false then continue end
-			if instant then 
-				task.spawn(f)
+			if instant then
+				--task.spawn(f)\
+				f()
 			else 
 				f() 
 			end
 		end
 	end
-	Properties.ClearNodes = function() table.clear(Properties.Connected);table.clear(Properties.Node_List);Properties.Refresh() end
+	Properties.ClearNodes = function() table.clear(Properties.Connected);table.clear(Properties.Node_List);--[[Properties.Refresh()]] end
 	Properties.GetProperies_Sorted = function(obj)
+		
 		local currentTitle = ""
 		local sortedList = {}
 		local SuperClass = ""
@@ -961,6 +979,10 @@ module.New = function()
 		["UDim2"] = {"X","Y"},
 		["Rect"] = {"Width","Height","Min","Max"},
 		["SecurityCapabilities"] = {},
+		["User"] = {"DomainType","DomainId","Id",},
+		["Font"] = {"Style","Bold","Weight","Family"},
+		["Axes"] = {"X","Y","Z","Left","Right","Top","Bottom","Front","Back"},
+		["Faces"] = {"Left","Right","Top","Bottom","Front","Back"},
 	}
 	Properties.DefaultPropValue = {
 		string = "",
@@ -1046,7 +1068,53 @@ module.New = function()
 						return parent.SetValue(CFrame.new(r.Position.X,r.Position.Y,r.Position.Z,	r.XVector.X,r.XVector.Y,r.XVector.Z, r.YVector.X,r.YVector.Y,r.YVector.Z, num.X,num.Y,num.Z ))
 					end
 					return nil
-				end 
+				end
+				if typeof(parent.GetValue()) == "Axes" then
+					local already = {}
+					local function convert(v)
+						if v == "X" or v == "Y" or v == "Z" then
+							return Enum.Axis:FromName(v)
+						else
+							return Enum.NormalId:FromName(v)
+						end
+					end
+					for _, v in Properties.ExpandableTypes.Axes do
+						already[#already+1] = convert(v)
+					end
+					local function AddOrRemove(prop)
+						local value = convert(prop)
+						if table.find(already,value) then
+							table.remove(already,table.find(already,value))
+						else
+							already[#already+1] = value
+						end
+					end
+					AddOrRemove(prop)
+					return parent.SetValue(Axes.new(table.unpack(already)))
+				end
+				if typeof(parent.GetValue()) == "Faces" then
+					local already = {}
+					local function convert(v)
+						if v == "X" or v == "Y" or v == "Z" then
+							return Enum.Axis:FromName(v)
+						else
+							return Enum.NormalId:FromName(v)
+						end
+					end
+					for _, v in Properties.ExpandableTypes.Faces do
+						already[#already+1] = convert(v)
+					end
+					local function AddOrRemove(prop)
+						local value = convert(prop)
+						if table.find(already,value) then
+							table.remove(already,table.find(already,value))
+						else
+							already[#already+1] = value
+						end
+					end
+					AddOrRemove(prop)
+					return parent.SetValue(Faces.new(table.unpack(already)))
+				end
 				if typeof(parent.GetValue()) == "SecurityCapabilities" then
 					local args = {}
 					for _, enum in Enum.SecurityCapability:GetEnumItems() do
@@ -1349,9 +1417,16 @@ module.New = function()
 	end
 	Properties.ShowObjectProperties = function(obj : Instance)
 		Properties.ClearNodes()
-		Properties.TagEditor.AddObjectProperties(obj)
+		if obj == nil then
+			return
+		end
+		--Properties.TagEditor.AddObjectProperties(obj)
 		for _, v in Properties.Connections do
 			pcall(function() v:Disconnect() end)
+		end
+		local NilInstancesFolder : Folder = (function() local x = nil;Enviorment.AppSignal:Fire("Explorer","AppIndex","NilInstancesFolder",function(v) x = v end) return x end)()
+		if obj == NilInstancesFolder then
+			return
 		end
 		for _, category in Properties.GetProperies_Sorted(obj) do
 			Properties.AddProperty({
@@ -1473,8 +1548,9 @@ module.New = function()
 			saveButton.Gui.Position = UDim2.new(0,5,1,-25)
 			saveButton.Gui.Size = UDim2.new(0,92,0,20)
 			saveButton.OnClick:Connect(function()
+				
 				local name = nameBox:GetText()
-				if is_tag then
+				if Properties._editingTag then
 					for _,obj in objects do
 						pcall(obj.AddTag,obj,name)
 					end
@@ -1512,6 +1588,7 @@ module.New = function()
 		end
 
 		if is_tag then win:SetTitle("Add Tag") else win:SetTitle(attribute ~= nil and "Edit Attribute " .. attribute or "Add Attribute") end
+		Properties._editingTag = is_tag
 		win.Elements.Error.Text = ""
 		win.Elements.NameBox:SetText("")
 		win.Elements.SaveButton:SetDisabled(true)
@@ -1519,7 +1596,7 @@ module.New = function()
 		win:Show()
 	end
 	
-	Properties.Window = Window.new()
+	Properties.Window = Embedded == true and {OnActivate = Signal.new(),OnDeactivate = Signal.new(),Show = function() end,SetSize = function(_,x,y) AppContainer.Size = UDim2.new(0,x,0,y); end,SetTitle = function() end,GuiElems = {Line = Instance.new("Frame"),Content = AppContainer}} or Window.new()
 	Properties.Window:SetTitle("Properties")
 	Properties.NodeContent = Properties.Window.GuiElems.Content:Clone()
 	Properties.NodeContent.BackgroundTransparency = 1
@@ -1789,6 +1866,9 @@ module.New = function()
 	return Properties
 end
 module.NewTagEditor = function(Properties)
+	if true then
+		return
+	end
 	local sub_module = {}
 	sub_module.YOffset = 0
 	sub_module.Node_List = {}
@@ -1880,5 +1960,9 @@ module.NewTagEditor = function(Properties)
 	sub_module.RemakeEntries()
 	return sub_module
 end
-module.Init = module.New
+module.Init = function(...)
+	local app = module.New(...)
+	APP_PROPERTIES = app
+	return app
+end
 return module
