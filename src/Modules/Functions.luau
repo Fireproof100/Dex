@@ -1,5 +1,26 @@
 local module = {}
 local rs = script
+local getrmetatable = getrawmetatable or function(...)
+	local x = getmetatable(...)
+	if x == nil then
+		return x
+	end
+	if typeof(x) ~= "table" then
+		return {__metatable = x}
+	end
+	return x
+end
+module.GetTableType = function(table_)
+	local lenght = rawlen(table_)
+	local real_lenght = 0
+	for _, v in pairs(table_) do -- pairs bypasses __iter
+		real_lenght += 1
+	end
+	if lenght ~= real_lenght then
+		return "Dict"
+	end
+	return "Array"
+end
 module.GetAncestors = function(obj,NoGame)
 	local list = {}
 	local p = obj
@@ -97,30 +118,50 @@ module.Value_To_Luau = function(...)
 			x = x .. value[b]
 			if i ~= #v then x = x .. ", " else x = x .. ")" end
 		end
-		return value 
+		return x 
 	elseif typ == "Instance" then
 		return module.GetInstancePath(value)
 	elseif typ == "table" then
-		local mt = getmetatable(value)
+		local mt = getrmetatable(value)
 		local x = "{"
 		if mt ~= nil then
-			x = "setmetatable("
+			x = "setmetatable({"
 		end
 		local done = 0
+		local lenght = 0
+		
+		for _, v in pairs(value) do-- pairs bypasses __iter 
+			lenght += 1
+		end
+		
 		for index, v in value do
-			x = x .. "[" .. module.Value_To_Luau(index) .. "] = " .. module.Value_To_Luau(v)
-			done = done + 1
-			if done == #value then
-				if mt ~= nil then
-					x = x .. "}, " .. module.Value_To_Luau(mt) .. ")"
+			if module.GetTableType(value) == "Dict" then
+				x = x .. "[" .. module.Value_To_Luau(index) .. "] = " .. module.Value_To_Luau(v)
+				done = done + 1
+				if done == lenght then
+					if mt ~= nil then
+						x = x .. "}, " .. module.Value_To_Luau(mt) .. ")"
+					else
+						x = x .. "}"
+					end
 				else
-					x = x .. "}"
+					x = x .. ", "
 				end
 			else
-				x = x .. ", "
+				x ..= module.Value_To_Luau(index)
+				done += 1
+				if done ~= lenght then
+					x ..= ", "
+				else
+					if mt ~= nil then
+						x ..= "}, " .. module.Value_To_Luau(mt) .. ")"
+					else
+						x ..= "}"
+					end
+				end
 			end
 		end
-		x = x .. "}"
+		--x = x .. "}"
 		return x
 	end
 	return tostring(value)
@@ -150,7 +191,28 @@ module.GetIcon = function(name)
 		return require(rs.Parent.Parent.UI.Icons.NewDark)["Instance"]
 	end
 	local content = require(icon_module)
-	return content[name] or content["Instance"]
+	if content[name] then
+		return content[name]
+	end
+	
+	return content["Instance"]
+end
+module.GetIconOfInstanceWith = function(instance : Instance,env)
+	local info = require(rs.Parent.Parent.UI.Info)
+	local icon_module = rs.Parent.Parent.UI.Icons:FindFirstChild(info.IconPack)
+	if not icon_module then
+		return require(rs.Parent.Parent.UI.Icons.NewDark)["Instance"]
+	end
+	local content = require(icon_module)
+	if content[instance.ClassName] then
+		return content[instance.ClassName],Vector2.new(0,0),Vector2.new(0,0)
+	end
+	for class_n, icon in content do
+		if instance:IsA(class_n) then
+			return icon,Vector2.new(0,0),Vector2.new(0,0)
+		end
+	end
+	return content["Instance"]
 end
 module.IsDestroyed = function(obj)
 	if not obj then
