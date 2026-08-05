@@ -68,7 +68,7 @@ module.NewScriptViewer = function()
 	local copyButton = Instance.new("TextButton", window.GuiElems.Content)
 	copyButton.BackgroundTransparency = 1
 	copyButton.Position = UDim2.new(0.0, 0, 1, -20)
-	copyButton.Size = UDim2.new(0.5, 0, 0, 20)
+	copyButton.Size = UDim2.new(0.25, 0, 0, 20)
 	copyButton.Text = "Copy To Clipboard"
 	copyButton.TextColor3 = Color3.new(1, 1, 1)
 	copyButton.BorderSizePixel = 0
@@ -81,15 +81,34 @@ module.NewScriptViewer = function()
 			return
 		end
 	end)
+	copyButton.TextXAlignment = Enum.TextXAlignment.Center
+	local execButton = Instance.new("TextButton", window.GuiElems.Content)
+	execButton.BackgroundTransparency = 1
+	execButton.Position = UDim2.new(0.25,0,1,-20)
+	execButton.Size = UDim2.new(0.25, 0, 0, 20)
+	execButton.Text = "Execute"
+	execButton.TextColor3 = Color3.new(1, 1, 1)
+	execButton.BorderSizePixel = 0
+	execButton.BackgroundTransparency = 1
+	execButton.TextXAlignment = Enum.TextXAlignment.Center
+	execButton.MouseButton1Click:Connect(function()
+		for _, tab in Tabs do
+			if tab.Selected ~= true then continue end	
 
+			pcall(loadstring, tab.Source)()
+			return
+		end
+	end)
+	
 	local saveButton = Instance.new("TextButton", window.GuiElems.Content)
 	saveButton.BackgroundTransparency = 1
-	saveButton.Size = UDim2.new(0.5, 0, 0, 20)
+	saveButton.Size = UDim2.new(0.25, 0, 0, 20)
 	saveButton.Position = UDim2.new(0.5, 0, 1, -20)
 	saveButton.Text = "Save To File"
 	saveButton.TextColor3 = Color3.new(1, 1, 1)
+	saveButton.TextXAlignment = Enum.TextXAlignment.Center
 	saveButton.MouseButton1Click:Connect(function()
-		-- TODO use SSI
+		--  use SSI
 		--pcall(Enviorment.Functions.writefile, "Place_" .. game.PlaceId .. "_Script_" .. os.time() .. ".lua", currentFrame:GetText())
 		SaveInstanceWindow:Show()
 	end)
