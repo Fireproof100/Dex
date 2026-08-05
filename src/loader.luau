@@ -1,6 +1,15 @@
 
 local s = {
 	Init = function()
+		local cloneref = cloneref or function(...) return (...) end
+		if game:GetService("CoreGui") == nil then
+			script.Parent.Parent = cloneref(game.Players).LocalPlayer.PlayerGui
+		elseif gethui == nil then
+			script.Parent.Parent = cloneref(game.CoreGui)
+		else
+			script.Parent.Parent = gethui()
+		end
+		
 		
 		local Apps = {}
 		local module = {}
