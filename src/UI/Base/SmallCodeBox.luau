@@ -8,6 +8,9 @@ end
 funcs.SetText = function(self,text)
 	self.GuiElems.Int_Box.Text = text
 end
+funcs.SetEditable = function(self,value)
+	self.GuiElems.Int_Box.TextEditable = value
+end
 local highlighter = require(script.Parent.Parent.Parent.Modules.Highlighter)
 static.new = function()
 	local obj;
@@ -24,6 +27,7 @@ static.new = function()
 			end
 		end
 	end)
+	int_box.TextEditable = true
 	int_box.TextTransparency = 0.2
 	new_label.RichText = true
 	task.spawn(function()
