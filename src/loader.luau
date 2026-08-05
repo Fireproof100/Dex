@@ -1,34 +1,37 @@
 
 local s = {
 	Init = function()
+		
 		local Apps = {}
 		local module = {}
 		local Main = {Apps = {}}
-
-
-
+		local NeedContainer = {} --{["Explorer"] = true,["Properties"] = true}
 		require(script.Parent.UI.Normal.Window).Init()
 		local Enviorment = require(script.Parent.Modules.Enviorment)(Apps)
-
-
-
-
-
-
-
-
 		local Intro = require(script.Parent.UI.Normal.Intro).CreateIntro("Loading")
 		local AppsL = #script.Parent.Apps:GetChildren()
+		local Signal = require(script.Parent.Modules.Signal)
+		local LoadSettings = LoadSettings or {}
+		Main.LoadAsContainer = function(m : ModuleScript)
+			local container = Instance.new("ScreenGui",script.Parent)
+			container.Name = "Window"
+			local frm = Instance.new("Frame",container)
+			frm.BackgroundColor3 = Enviorment.Settings.Theme.Main1
+			frm.BorderSizePixel = 0
+			frm.Visible = true
+			return require(m).Init(true,frm)
+		end
+		
+		
 		Intro.SetProgress("Fetching API",1/(AppsL + 2)*1)
 		Enviorment.API = Enviorment.FetchAPI()
 		Intro.SetProgress("Fetching RMD",1/(AppsL + 2)*2)
 		Enviorment.RMD = Enviorment.FetchRMD()
 		for i,v  in script.Parent.Apps:GetChildren() do
 			Intro.SetProgress("Loading App: " .. v.Name,1/(AppsL + 2)*(i+2))
-			--task.spawn(function()
-			local result = table.pack(true,require(v).Init())--table.pack(pcall(require(v).Init))
+			local result = table.pack(true,NeedContainer[v.Name] == true and Main.LoadAsContainer(v) or require(v).Init())
 			Apps[v.Name] = result[2];warn("App ",result)
-			--end)
+
 			if result[1] ~= true then
 				Intro.SetProgress("Failed Loading App: " .. v.Name,1/(AppsL+2)*(i+2))
 				task.wait(5)
@@ -58,7 +61,7 @@ local s = {
 			end
 
 			local function updateState()
-				app.Main.BackgroundTransparency = data.Open and 0 or (Lib.CheckMouseInGui(app.Main) and 0 or 1)
+				app.Main.BackgroundTransparency = data.Open and 0 or (Enviorment.CheckMouseInGui(app.Main) and 0 or 1)
 				app.Main.Highlight.Visible = data.Open
 			end
 
@@ -84,21 +87,21 @@ local s = {
 
 			updateState()
 
-			local ySize = service.TextService:GetTextSize(data.Name,14,Enum.Font.SourceSans,Vector2.new(62,999999)).Y
+			local ySize = Enviorment.service.TextService:GetTextSize(data.Name,14,Enum.Font.SourceSans,Vector2.new(62,999999)).Y
 			app.Main.Size = UDim2.new(1,0,0,math.clamp(46+ySize,60,74))
 			app.Main.AppName.Text = data.Name
 
 			app.Main.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseMovement then
 					app.Main.BackgroundTransparency = 0
-					app.Main.BackgroundColor3 = Settings.Theme.ButtonHover
+					app.Main.BackgroundColor3 = Enviorment.Settings.Theme.ButtonHover
 				end
 			end)
 
 			app.Main.InputEnded:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseMovement then
 					app.Main.BackgroundTransparency = data.Open and 0 or 1
-					app.Main.BackgroundColor3 = Settings.Theme.Button
+					app.Main.BackgroundColor3 = Enviorment.Settings.Theme.Button
 				end
 			end)
 
@@ -129,7 +132,7 @@ local s = {
 			if val then Main.MainGui.OpenButton.MainFrame.Visible = true end
 			Main.MainGui.OpenButton.MainFrame:TweenSize(val and UDim2.new(0,224,0,200) or UDim2.new(0,0,0,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.2,true)
 			--Main.MainGui.OpenButton.BackgroundTransparency = val and 0 or (Lib.CheckMouseInGui(Main.MainGui.OpenButton) and 0 or 0.2)
-			TweenS:Create(Main.MainGui.OpenButton,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = val and 0 or (Lib.CheckMouseInGui(Main.MainGui.OpenButton) and 0 or 0.2)}):Play()
+			Enviorment.TweenS:Create(Main.MainGui.OpenButton,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = val and 0 or (Enviorment.CheckMouseInGui(Main.MainGui.OpenButton) and 0 or 0.2)}):Play()
 
 			if Main.MainGuiMouseEvent then Main.MainGuiMouseEvent:Disconnect() end
 
@@ -137,12 +140,12 @@ local s = {
 				local startTime = tick()
 				Main.MainGuiCloseTime = startTime
 				coroutine.wrap(function()
-					Lib.FastWait(0.2)
+					Enviorment.FastWait(0.2)
 					if not Main.MainGuiOpen and startTime == Main.MainGuiCloseTime then Main.MainGui.OpenButton.MainFrame.Visible = false end
 				end)()
 			else
-				Main.MainGuiMouseEvent = service.UserInputService.InputBegan:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 and not Lib.CheckMouseInGui(Main.MainGui.OpenButton) and not Lib.CheckMouseInGui(Main.MainGui.OpenButton.MainFrame) then
+				Main.MainGuiMouseEvent = Enviorment.service.UserInputService.InputBegan:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 and not Enviorment.CheckMouseInGui(Main.MainGui.OpenButton) and not Enviorment.CheckMouseInGui(Main.MainGui.OpenButton.MainFrame) then
 						Main.SetMainGuiOpen(false)
 					end
 				end)
@@ -189,13 +192,13 @@ local s = {
 
 			openButton.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseMovement then
-					TweenS:Create(Main.MainGui.OpenButton,TweenInfo.new(0,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = 0}):Play()
+					Enviorment.TweenS:Create(Main.MainGui.OpenButton,TweenInfo.new(0,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = 0}):Play()
 				end
 			end)
 
 			openButton.InputEnded:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseMovement then
-					TweenS:Create(Main.MainGui.OpenButton,TweenInfo.new(0,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = Main.MainGuiOpen and 0 or 0.2}):Play()
+					Enviorment.TweenS:Create(Main.MainGui.OpenButton,TweenInfo.new(0,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = Main.MainGuiOpen and 0 or 0.2}):Play()
 				end
 			end)
 
@@ -205,14 +208,51 @@ local s = {
 			Main.CreateApp({Name = "Properties", IconMap = Enviorment.LargeIcons, Icon = "Properties", Open = true, Window = Apps.Properties.Window})
 
 			Main.CreateApp({Name = "Script Viewer", IconMap = Enviorment.LargeIcons, Icon = "Script_Viewer", Window = Apps.ScriptViewer.Window})
+			
 
+			local cptsOnMouseClick = nil
+			Main.CreateApp({Name = "Click part to select", IconMap = Enviorment.LargeIcons, Icon = "Book", OnClick = function(callback)
+				if callback then
+					local mouse = Enviorment.Mouse
+					cptsOnMouseClick = mouse.Button1Down:Connect(function()
+						pcall(function()
+							local object = mouse.Target
+							Apps.Explorer.Window:Show()
+							Apps.Explorer.StopSearch()
+							Apps.Explorer.ViewObject(object)
+						end)
+					end)
+				else if cptsOnMouseClick ~= nil then cptsOnMouseClick:Disconnect() cptsOnMouseClick = nil end end
+			end})
+			
 			Main.CreateApp({Name = "Console", IconMap = Enviorment.LargeIcons, Icon = "Output", Window = Apps.Console.Window})
-
+			
+			Main.CreateApp({Name = "Save Instance", IconMap = Enviorment.LargeIcons, Icon = "Watcher", Window = Apps.SaveInstance.Window})
+			
+			if LoadSettings.Beta then
+				Main.CreateApp({Name = "Function Interface", IconMap = Enviorment.LargeIcons, Icon = "Watcher", Window = Apps.Interface.Window})
+			end
+			
+			
+			
 			--Main.CreateApp({Name = "Remote Spy", IconMap = Enviorment.LargeIcons, Icon = "Script_Viewer", Window = Apps.RemoteSpy.Window})
 			--Lib.ShowGui(gui)
 			gui.Parent = script.Parent
 		end
 		CreateMainGui()
+		Enviorment.AppSignal:Connect(function(appName,callback)
+			if appName == "Loader" then
+				return callback(Apps,Main)
+			end
+		end)
+		Enviorment.UsePluginAPI = true
+		local PluginAPI = require(script.Parent.Modules.PluginAPI)
+		if getgenv ~= nil then
+			getgenv().Dex = PluginAPI
+		else
+			_G.Dex = PluginAPI
+		end
+		Enviorment.PluginAPI = PluginAPI
 		Apps.Explorer.Window:Show({ Align = "right", Pos = 1, Size = 0.5, Silent = true })
 		Apps.Properties.Window:Show({ Align = "right", Pos = 2, Size = 0.5, Silent = true })
 		if Apps.ExplorerDex then
@@ -221,6 +261,6 @@ local s = {
 		Intro.SetProgress("Done",1)
 		task.wait(1)
 		Intro.Close()
-	end,
+	end
 }
 return s
