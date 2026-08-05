@@ -69,15 +69,51 @@ module.new = function()
 		end
 		return Connection
 	end
+	Signal.Once = function(self,callback)
+		if self ~= Signal then
+			error("Expected ':' not '.' when calling member function")
+		end
+		local Connection;Connection = Signal:Connect(function(...)
+			Connection:Disconnect()
+			callback(...)
+		end)
+		return Connection
+	end
 	Signal.Wait = function(self)
 		if self ~= Signal then
 			error("Expected ':' not '.' when calling member function")
 		end
 		repeat task.wait() until Signal.Firing == true
 	end
+	Signal.FireInstant = function(self,...)
+		if self ~= Signal then
+			error("Expected ':' not '.' when calling member function")
+		end
+		Signal.Firing = true
+		--task.wait()
+		for _, connection in Signal.Connections do
+			if connection == nil then
+				continue
+			end
+			if connection.Connected ~= true then
+				continue
+			end
+			if connection.Enabled ~= true then
+				continue
+			end
+			if connection.Function == nil then
+				continue
+			end
+			task.spawn(connection.Function,...)
+		end
+		Signal.Firing = false
+	end
 	Signal.Fire = function(self,...)
 		if self ~= Signal then
 			error("Expected ':' not '.' when calling member function")
+		end
+		if coroutine.isyieldable() == false then
+			return self:FireInstant(...)
 		end
 		Signal.Firing = true
 		task.wait()
