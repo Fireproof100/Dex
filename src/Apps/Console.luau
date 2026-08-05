@@ -762,8 +762,15 @@ module.New = function()
 
 		Console.CommandLine.ScrollingFrame.TextBox.FocusLost:Connect(function(enterPressed)
 			if enterPressed and Console.CommandLine.ScrollingFrame.TextBox.Text ~= "" then
-				print("> "..Console.CommandLine.ScrollingFrame.TextBox.Text)
-				loadstring(Console.CommandLine.ScrollingFrame.TextBox.Text)()
+				local text = Console.CommandLine.ScrollingFrame.TextBox.Text
+				print("> "..text)
+				local f = loadstring(text)
+				setfenv(f,setmetatable({
+					API = Enviorment.PluginAPI,
+				},{
+					__index = getfenv()
+				}))
+				f()
 			end
 		end)
 	end
