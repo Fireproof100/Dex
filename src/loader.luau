@@ -264,9 +264,7 @@ local s = {
 		Enviorment.PluginAPI = PluginAPI
 		Apps.Explorer.Window:Show({ Align = "right", Pos = 1, Size = 0.5, Silent = true })
 		Apps.Properties.Window:Show({ Align = "right", Pos = 2, Size = 0.5, Silent = true })
-		if Apps.ExplorerDex then
-			Apps.ExplorerDex.Window:Show({ Align = "right", Pos = 1, Size = 0.5, Silent = true })
-		end
+		
 		Intro.SetProgress("Done",1)
 		task.wait(1)
 		Intro.Close()
