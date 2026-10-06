@@ -34,9 +34,12 @@ module.new = function()
 	Signal.Firing = false
 	Signal.Callbacks = {}
 	Signal.Connections = {}
+	Signal.MemberError = function()
+		error("Expected ':' not '.' when calling member function in function " .. debug.info(debug.info(3,"f"),"s") .. " from " .. (getfenv(debug.info(3,"f")).script and getfenv(debug.info(3,"f")).script.Name or "???"))
+	end
 	Signal.Connect = function(self,callback)
 		if self ~= Signal then
-			error("Expected ':' not '.' when calling member function")
+			Signal.MemberError()
 		end
 		local Connection = setmetatable({__type = "Connection"},{__type = "Connection",__metatable = "Locked"})
 		Connection.Signal = Signal
@@ -50,20 +53,20 @@ module.new = function()
 		Connection.Enabled = true
 		Connection.Disconnect = function(self)
 			if self ~= Connection then
-				error("Expected ':' not '.' when calling member function")
+				Signal.MemberError()
 			end
 			table.remove(Connection.Signal.Callbacks,Connection.idx)
 			table.remove(Connection.Signal.Connections,Connection.idx)
 		end
 		Connection.Disable = function(self)
 			if self ~= Connection then
-				error("Expected ':' not '.' when calling member function")
+				Signal.MemberError()
 			end
 			Connection.Enabled = false
 		end
 		Connection.Enable = function(self)
 			if self ~= Connection then
-				error("Expected ':' not '.' when calling member function")
+				Signal.MemberError()
 			end
 			Connection.Enabled = true
 		end
@@ -71,7 +74,7 @@ module.new = function()
 	end
 	Signal.Once = function(self,callback)
 		if self ~= Signal then
-			error("Expected ':' not '.' when calling member function")
+			Signal.MemberError()
 		end
 		local Connection;Connection = Signal:Connect(function(...)
 			Connection:Disconnect()
@@ -81,13 +84,13 @@ module.new = function()
 	end
 	Signal.Wait = function(self)
 		if self ~= Signal then
-			error("Expected ':' not '.' when calling member function")
+			Signal.MemberError()
 		end
 		repeat task.wait() until Signal.Firing == true
 	end
 	Signal.FireInstant = function(self,...)
 		if self ~= Signal then
-			error("Expected ':' not '.' when calling member function")
+			Signal.MemberError()
 		end
 		Signal.Firing = true
 		--task.wait()
@@ -116,7 +119,6 @@ module.new = function()
 			return self:FireInstant(...)
 		end
 		Signal.Firing = true
-		task.wait()
 		for _, connection in Signal.Connections do
 			if connection == nil then
 				continue
