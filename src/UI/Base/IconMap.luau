@@ -1,5 +1,8 @@
 local funcs = {}
-
+local IconList = {
+	
+	
+}
 function funcs:GetLabel()
 	local label = Instance.new("ImageLabel")
 	self:SetupLabel(label)
@@ -19,11 +22,26 @@ function funcs:Display(label, index)
 	if self.NumX then
 		label.ImageRectOffset =
 			Vector2.new(self.IconSizeX * (index % self.NumX), self.IconSizeY * math.floor(index / self.NumX))
+		label.ImageRectSize = Vector2.new(self.IconSizeX, self.IconSizeY)
 	else
 		label.ImageRectOffset = Vector2.new(self.IconSizeX * index, 0)
+		label.ImageRectSize = Vector2.new(self.IconSizeX, self.IconSizeY)
 	end
 end
-
+function funcs:GetDisplayInfo(index)
+	print(index)
+	if index == nil then
+		return self.MapId, Vector2.new(0, 0), Vector2.new(0, 0)
+	end
+	if self.NumX then
+		return
+			self.MapId,
+			Vector2.new(self.IconSizeX * (index % self.NumX), self.IconSizeY * math.floor(index / self.NumX)), 
+			Vector2.new(self.IconSizeX, self.IconSizeY)
+	else
+		return self.MapId,Vector2.new(self.IconSizeX * index, 0), Vector2.new(self.IconSizeX, self.IconSizeY)
+	end
+end
 function funcs:DisplayByKey(label, key)
 	local index = self.IndexDict[key]
 	if index then
@@ -39,6 +57,7 @@ local mt = {}
 mt.__index = funcs
 
 local function new(mapId, mapSizeX, mapSizeY, iconSizeX, iconSizeY)
+	print(mapId,mapSizeX,mapSizeY,iconSizeX,iconSizeY)
 	local obj = setmetatable({
 		MapId = mapId,
 		MapSizeX = mapSizeX,
@@ -61,4 +80,4 @@ local function newLinear(mapId, iconSizeX, iconSizeY)
 	return obj
 end
 
-return { new = new, newLinear = newLinear }
+return { new = new, newLinear = newLinear, IconList = IconList}
