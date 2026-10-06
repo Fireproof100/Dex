@@ -24,23 +24,23 @@ local keywords = {
 		"#", "+", "-", "*", "%", "/", "^", "=", "~", "=", "<", ">", ",", ".", "(", ")", "{", "}", "[", "]", ";", ":"
 	}
 }
--- TODO: Theme
+
 local colors = {
 	numbers = Enviorment.Settings.Theme.Syntax.Number or Color3.fromRGB(255, 198, 0),
 	boolean = Enviorment.Settings.Theme.Syntax.Bool or Color3.fromRGB(255, 198, 0),
 	operator = Enviorment.Settings.Theme.Syntax.Operator or Color3.fromRGB(204, 204, 204),
 	lua = Enviorment.Settings.Theme.Syntax.BuiltIn or Color3.fromRGB(132, 214, 247),
 	exploit = Enviorment.Settings.Theme.Syntax.Exploit or Color3.fromRGB(171, 84, 247),
-	rbx = Color3.fromRGB(248, 109, 124),
-	str = Color3.fromRGB(173, 241, 132),
-	comment = Color3.fromRGB(102, 102, 102),
-	null = Color3.fromRGB(255, 198, 0),
-	call = Color3.fromRGB(253, 251, 172),
-	self_call = Color3.fromRGB(253, 251, 172),
-	local_color = Color3.fromRGB(248, 109, 115),
-	function_color = Color3.fromRGB(248, 109, 115),
-	self_color = Color3.fromRGB(248, 109, 115),
-	local_property = Color3.fromRGB(97, 161, 241),
+	rbx = Enviorment.Settings.Theme.Syntax.Keyword,
+	str = Enviorment.Settings.Theme.Syntax.String,
+	comment = Enviorment.Settings.Theme.Syntax.Comment,
+	null = Enviorment.Settings.Theme.Syntax.Nil,
+	call = Enviorment.Settings.Theme.Syntax.LocalMethod,
+	self_call = Enviorment.Settings.Theme.Syntax.LocalMethod,
+	local_color = Enviorment.Settings.Theme.Syntax.Local,
+	function_color = Enviorment.Settings.Theme.Syntax.FunctionName,
+	self_color = Enviorment.Settings.Theme.Syntax.Self,
+	local_property = Enviorment.Settings.Theme.Syntax.LocalProperty,
 }
 
 local function createKeywordSet(keywords)
