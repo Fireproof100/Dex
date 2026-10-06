@@ -20,7 +20,23 @@ local s = {
 		local Intro = require(script.Parent.UI.Normal.Intro).CreateIntro("Loading")
 		local AppsL = #script.Parent.Apps:GetChildren()
 		local Signal = require(script.Parent.Modules.Signal)
-		local LoadSettings = LoadSettings or {}
+		local LoadSettings = {Beta = Enviorment.IsStudio}
+		
+		local IconMap = require(script.Parent.UI.Base.IconMap)
+		Enviorment.MiscIcons = IconMap.new("rbxassetid://6511490623",256,256,16,16)
+		Enviorment.MiscIcons:SetDict({
+			Reference = 0,             Cut = 1,                         Cut_Disabled = 2,      Copy = 3,               Copy_Disabled = 4,    Paste = 5,                Paste_Disabled = 6,
+			Delete = 7,                Delete_Disabled = 8,             Group = 9,             Group_Disabled = 10,    Ungroup = 11,         Ungroup_Disabled = 12,    TeleportTo = 13,
+			Rename = 14,               JumpToParent = 15,               ExploreData = 16,      Save = 17,              CallFunction = 18,    CallRemote = 19,          Undo = 20,
+			Undo_Disabled = 21,        Redo = 22,                       Redo_Disabled = 23,    Expand_Over = 24,       Expand = 25,          Collapse_Over = 26,       Collapse = 27,
+			SelectChildren = 28,       SelectChildren_Disabled = 29,    InsertObject = 30,     ViewScript = 31,        AddStar = 32,         RemoveStar = 33,          Script_Disabled = 34,
+			LocalScript_Disabled = 35, Play = 36,                       Pause = 37,            Rename_Disabled = 38,   Empty = 1000
+		})
+		Enviorment.LargeIcons = IconMap.new("rbxassetid://129589545519436",256,256,32,32)
+		Enviorment.LargeIcons:SetDict({
+			Explorer = 0, Properties = 1, Script_Viewer = 2, Watcher = 3, Output = 4, ScriptEdit = 5, Book = 6, Executor = 7, Object = 8, Honey = 9 })
+		
+		
 		Main.LoadAsContainer = function(m : ModuleScript)
 			local container = Instance.new("ScreenGui",script.Parent)
 			container.Name = "Window"
@@ -137,7 +153,7 @@ local s = {
 		Main.SetMainGuiOpen = function(val)
 			Main.MainGuiOpen = val
 
-			Main.MainGui.OpenButton.Text = val and "X" or "Dex"
+			Main.MainGui.OpenButton.Text = val and "X" or "Dex++++"
 			if val then Main.MainGui.OpenButton.MainFrame.Visible = true end
 			Main.MainGui.OpenButton.MainFrame:TweenSize(val and UDim2.new(0,224,0,200) or UDim2.new(0,0,0,0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.2,true)
 			--Main.MainGui.OpenButton.BackgroundTransparency = val and 0 or (Lib.CheckMouseInGui(Main.MainGui.OpenButton) and 0 or 0.2)
@@ -163,7 +179,7 @@ local s = {
 		CreateMainGui = function()
 			local gui = create({
 				{1,"ScreenGui",{IgnoreGuiInset=true,Name="MainMenu",}},
-				{2,"TextButton",{AnchorPoint=Vector2.new(0.5,0),AutoButtonColor=false,BackgroundColor3=Color3.new(0.17647059261799,0.17647059261799,0.17647059261799),BorderSizePixel=0,Font=4,Name="OpenButton",Parent={1},Position=UDim2.new(0.5,0,0,2),Size=UDim2.new(0,32,0,32),Text="Dex",TextColor3=Color3.new(1,1,1),TextSize=16,TextTransparency=0.20000000298023,}},
+				{2,"TextButton",{AnchorPoint=Vector2.new(0.5,0),AutoButtonColor=false,BackgroundColor3=Color3.new(0.17647059261799,0.17647059261799,0.17647059261799),BorderSizePixel=0,Font=4,Name="OpenButton",Parent={1},Position=UDim2.new(0.5,0,0,2),Size=UDim2.new(0,64,0,32),Text="Dex++++",TextColor3=Color3.new(1,1,1),TextSize=16,TextTransparency=0.20000000298023,}},
 				{3,"UICorner",{CornerRadius=UDim.new(0,4),Parent={2},}},
 				{4,"Frame",{AnchorPoint=Vector2.new(0.5,0),BackgroundColor3=Color3.new(0.17647059261799,0.17647059261799,0.17647059261799),ClipsDescendants=true,Name="MainFrame",Parent={2},Position=UDim2.new(0.5,0,1,-4),Size=UDim2.new(0,224,0,200),}},
 				{5,"UICorner",{CornerRadius=UDim.new(0,4),Parent={4},}},
@@ -210,7 +226,9 @@ local s = {
 					Enviorment.TweenS:Create(Main.MainGui.OpenButton,TweenInfo.new(0,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency = Main.MainGuiOpen and 0 or 0.2}):Play()
 				end
 			end)
-
+			openButton.MainFrame.BottomFrame.Settings.Activated:Connect(function()
+				Apps.Settings.Window:ShowAndFocus()
+			end)
 			-- Create Main Apps
 			Main.CreateApp({Name = "Explorer", IconMap = Enviorment.LargeIcons, Icon = "Explorer", Open = true, Window = Apps.Explorer.Window})
 
@@ -264,7 +282,6 @@ local s = {
 		Enviorment.PluginAPI = PluginAPI
 		Apps.Explorer.Window:Show({ Align = "right", Pos = 1, Size = 0.5, Silent = true })
 		Apps.Properties.Window:Show({ Align = "right", Pos = 2, Size = 0.5, Silent = true })
-		
 		Intro.SetProgress("Done",1)
 		task.wait(1)
 		Intro.Close()
