@@ -18,11 +18,11 @@ local sideTweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirec
 local tweens = {}
 local isA = game.IsA
 
-local theme = {
-	MainColor1 = Lib.Settings.Theme.Main1,
-	MainColor2 = Lib.Settings.Theme.Main2,
-	Button = Lib.Settings.Theme.Button,
-}
+--local theme = {
+--	MainColor1 = Lib.Settings.Theme.Main1,
+--	MainColor2 = Lib.Settings.Theme.Main2,
+--	Button = Lib.Settings.Theme.Button,
+--}
 
 local function stopTweens()
 	for i = 1, #tweens do
@@ -177,7 +177,7 @@ local createGui = function(self)
 			3,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.new(0.17647059261799, 0.17647059261799, 0.17647059261799),
+				BackgroundColor3 = Lib.Settings.Theme.Main2,
 				BorderSizePixel = 0,
 				BackgroundTransparency = Lib.Settings.Window.BackgroundTransparency,
 				Name = "Content",
@@ -191,7 +191,7 @@ local createGui = function(self)
 			4,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.fromRGB(33, 33, 33),
+				BackgroundColor3 = Lib.Settings.Theme.Outline1,
 				BorderSizePixel = 0,
 				Name = "Line",
 				Parent = { 3 },
@@ -202,7 +202,7 @@ local createGui = function(self)
 			5,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.new(0.20392157137394, 0.20392157137394, 0.20392157137394),
+				BackgroundColor3 = Lib.Settings.Theme.Main1,
 				BorderSizePixel = 0,
 				Name = "TopBar",
 				Parent = { 2 },
@@ -218,12 +218,12 @@ local createGui = function(self)
 				Font = 3,
 				Name = "Title",
 				Parent = { 5 },
-				Position = UDim2.new(0, 5, 0, 0),
+				Position =  UDim2.new(0, 5, 0, 0),
 				Size = UDim2.new(1, -10, 0, 20),
 				Text = "Window",
 				TextColor3 = Color3.new(1, 1, 1),
 				TextSize = 14,
-				TextXAlignment = 0,
+				TextXAlignment = Lib.Settings.Window.TitleOnMiddle and Enum.TextXAlignment.Center or 0,
 			},
 		},
 		{
@@ -231,7 +231,7 @@ local createGui = function(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.12549020349979, 0.12549020349979, 0.12549020349979),
+				BackgroundColor3 = Lib.Settings.Theme.Menu,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Font = 3,
@@ -262,7 +262,7 @@ local createGui = function(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.12549020349979, 0.12549020349979, 0.12549020349979),
+				BackgroundColor3 = Lib.Settings.Theme.Menu,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Font = 3,
@@ -322,7 +322,7 @@ local createGui = function(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.27450981736183, 0.27450981736183, 0.27450981736183),
+				BackgroundColor3 = Lib.Settings.Theme.Highlight5,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Font = 3,
@@ -340,7 +340,7 @@ local createGui = function(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.27450981736183, 0.27450981736183, 0.27450981736183),
+				BackgroundColor3 =Lib.Settings.Theme.Highlight5,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Font = 3,
@@ -358,7 +358,7 @@ local createGui = function(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.27450981736183, 0.27450981736183, 0.27450981736183),
+				BackgroundColor3 = Lib.Settings.Theme.Highlight5,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Font = 3,
@@ -376,7 +376,7 @@ local createGui = function(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.27450981736183, 0.27450981736183, 0.27450981736183),
+				BackgroundColor3 = Lib.Settings.Theme.Highlight5,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Font = 3,
@@ -394,7 +394,7 @@ local createGui = function(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.27450981736183, 0.27450981736183, 0.27450981736183),
+				BackgroundColor3 = Lib.Settings.Theme.Highlight5,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Font = 3,
@@ -412,7 +412,7 @@ local createGui = function(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.27450981736183, 0.27450981736183, 0.27450981736183),
+				BackgroundColor3 = Lib.Settings.Theme.Highlight5,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Font = 3,
@@ -430,7 +430,7 @@ local createGui = function(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.27450981736183, 0.27450981736183, 0.27450981736183),
+				BackgroundColor3 = Lib.Settings.Theme.Highlight5,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Font = 3,
@@ -447,7 +447,7 @@ local createGui = function(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.27450981736183, 0.27450981736183, 0.27450981736183),
+				BackgroundColor3 = Lib.Settings.Theme.Highlight5,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Font = 3,
@@ -477,6 +477,51 @@ local createGui = function(self)
 	self.GuiElems.ResizeControls = guiResizeControls
 	self.ContentPane = guiMain.Content
 
+	Lib.Settings.Window.Changed:Connect(function(key,value)
+		if key == "TitleOnMiddle" then
+			if value then
+				guiTopBar.Title.TextXAlignment = Enum.TextXAlignment.Center
+			else
+				guiTopBar.Title.TextXAlignment = Enum.TextXAlignment.Left
+			end
+		end
+		if key == "BackgroundTransparency" then
+			guiMain.Content.BackgroundTransparency = value--Lib.Settings.Window.BackgroundTransparency
+		end
+	end)
+	guiMain.Content.BackgroundTransparency = Lib.Settings.Window.BackgroundTransparency
+	
+	Lib.Settings.Theme.Changed:Connect(function(k,v,old)
+		local OnGui;OnGui = function(g)
+			if g:IsA("GuiObject") then
+				pcall(function()
+					if g.BackgroundColor3 == old then
+						g.BackgroundColor3 = v
+					end
+				end)
+				pcall(function()
+					if g.BorderColor3 == old then
+						g.BorderColor3 = v
+					end
+				end)
+				pcall(function()
+					if g.ImageColor3 == old then
+						g.ImageColor3 = v
+					end
+				end)
+				pcall(function()
+					if g.TextColor3 == old then
+						g.TextColor3 = v
+					end
+				end)
+			end
+			for _, x in g:GetChildren() do
+				OnGui(x)
+			end
+		end
+		OnGui(guiMain)
+	end)
+	
 	guiTopBar.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 and self.Draggable then
 			local releaseEvent, mouseEvent
@@ -623,6 +668,8 @@ end
 
 local function updateSideFrames(noTween)
 	stopTweens()
+	leftSide.Frame.BackgroundTransparency = Lib.Settings.Window.BackgroundTransparency
+	rightSide.Frame.BackgroundTransparency = Lib.Settings.Window.BackgroundTransparency
 	leftSide.Frame.Size = UDim2.new(0, leftSide.Width, 1, 0)
 	rightSide.Frame.Size = UDim2.new(0, rightSide.Width, 1, 0)
 	leftSide.Frame.Resizer.Position = UDim2.new(0, leftSide.Width, 0, 0)
@@ -690,7 +737,7 @@ local function sideResizerHook(resizer, dir, side, pos)
 	resizer.InputBegan:Connect(function(input)
 		if not side.Resizing then
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
-				resizer.BackgroundColor3 = theme.MainColor2
+				resizer.BackgroundColor3 = Lib.Settings.Theme.Main2
 			elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
 				local releaseEvent, mouseEvent
 
@@ -698,14 +745,14 @@ local function sideResizerHook(resizer, dir, side, pos)
 				local offY = mouse.Y - resizer.AbsolutePosition.Y
 
 				side.Resizing = resizer
-				resizer.BackgroundColor3 = theme.MainColor2
+				resizer.BackgroundColor3 = Lib.Settings.Theme.Main2
 
 				releaseEvent = UserInputService.InputEnded:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
 						releaseEvent:Disconnect()
 						mouseEvent:Disconnect()
 						side.Resizing = false
-						resizer.BackgroundColor3 = theme.Button
+						resizer.BackgroundColor3 = Lib.Settings.Theme.Button
 					end
 				end)
 
@@ -774,7 +821,7 @@ local function sideResizerHook(resizer, dir, side, pos)
 
 	resizer.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement and side.Resizing ~= resizer then
-			resizer.BackgroundColor3 = theme.Button
+			resizer.BackgroundColor3 = Lib.Settings.Theme.Button
 		end
 	end)
 end
