@@ -300,7 +300,7 @@ local function makeFrame(obj)
 			1,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.new(0.15686275064945, 0.15686275064945, 0.15686275064945),
+				BackgroundColor3 = Enviorment.Settings.Theme.ButtonPress,
 				BorderSizePixel = 0,
 				Position = UDim2.new(0.5, -300, 0.5, -200),
 				Size = UDim2.new(0, 600, 0, 400),
@@ -328,7 +328,7 @@ local function makeFrame(obj)
 
 	local cursor = Instance.new("Frame")
 	cursor.Name = "Cursor"
-	cursor.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+	cursor.BackgroundColor3 = Enviorment.Settings.Theme.Highlight6
 	cursor.BorderSizePixel = 0
 	cursor.Parent = frame
 
@@ -358,7 +358,7 @@ local function makeFrame(obj)
 			1,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.new(0.15686275064945, 0.15686275064945, 0.15686275064945),
+				BackgroundColor3 = Enviorment.Settings.Theme.ButtonPress,
 				BorderSizePixel = 0,
 				Name = "ScrollCorner",
 				Position = UDim2.new(1, -16, 1, -16),
@@ -1093,7 +1093,7 @@ funcs.Refresh = function(self)
 			local selectionHighlight = Instance.new("Frame")
 			selectionHighlight.Name = "SelectionHighlight"
 			selectionHighlight.BorderSizePixel = 0
-			selectionHighlight.BackgroundColor3 = Settings.Theme.Syntax.SelectionBack
+			selectionHighlight.BackgroundColor3 = Enviorment.Settings.Theme.Syntax.SelectionBack
 			selectionHighlight.Parent = lineFrame
 
 			local label = Instance.new("TextLabel")
@@ -1309,9 +1309,9 @@ funcs.MakeRichTemplates = function(self)
 
 	for name, color in self.Colors do
 		templates[name] = ('<font color="rgb(%s,%s,%s)">'):format(
-			floor(color.r * 255),
-			floor(color.g * 255),
-			floor(color.b * 255)
+			floor(color.R * 255),
+			floor(color.G * 255),
+			floor(color.B * 255)
 		)
 	end
 
@@ -1319,7 +1319,7 @@ funcs.MakeRichTemplates = function(self)
 end
 
 funcs.ApplyTheme = function(self)
-	local colors = Settings.Theme.Syntax
+	local colors = Enviorment.Settings.Theme.Syntax
 	self.Colors = colors
 	self.Frame.LineNumbers.TextColor3 = colors.Text
 	self.Frame.BackgroundColor3 = colors.Background
@@ -1339,7 +1339,7 @@ local function new()
 		FontSize = 15,
 		ViewX = 0,
 		ViewY = 0,
-		Colors = Settings.Theme.Syntax,
+		Colors = Enviorment.Settings.Theme.Syntax,
 		ColoredLines = {},
 		Lines = { "" },
 		LineFrames = {},
@@ -1357,7 +1357,9 @@ local function new()
 		ScrollV = scrollV,
 		ScrollH = scrollH,
 	}, mt)
-
+	--Enviorment.Settings.Theme.Syntax.Changed:Connect(function()
+	--	obj:ApplyTheme()
+	--end)
 	scrollV.WheelIncrement = 3
 	scrollH.Increment = 2
 	scrollH.WheelIncrement = 7
