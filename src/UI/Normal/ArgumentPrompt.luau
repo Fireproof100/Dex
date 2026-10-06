@@ -47,7 +47,12 @@ static.new = function(count)
 	frm.BackgroundTransparency = 1
 	--obj.GuiElems.Window.GuiElems.Content.Line:Destroy()
 	for i=1,(count or 10) do obj:AddArgument() end
-	obj.Window:SetSize(obj.Window.SizeX,(obj.Window.SizeY) / 10 * (count or 10)) 
+	obj.Window:SetSize(obj.Window.SizeX,(obj.Window.SizeY) / 10 * (count or 10))
+	if count == 1 then
+		obj.Window:SetSize(obj.Window.SizeX,obj.Window.SizeY + 50)
+	elseif count == 10 then
+		obj.Window:SetSize(obj.Window.SizeX,obj.Window.SizeY - 80)
+	end
 	obj.GuiElems.Window.Resizable = false
 	
 	
