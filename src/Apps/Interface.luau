@@ -1,4 +1,3 @@
-
 local module = {}
 local Window = require(script.Parent.Parent.UI.Normal.Window)
 local Frame = require(script.Parent.Parent.UI.Base.Frame)
@@ -43,6 +42,7 @@ module.New = function()
 		local name = debug.info(func,"n")
 		local params,is_vararg = debug.info(func,"a")
 		if name == "" or name == nil then name = tostring(func) end 
+		local icon,offset,size = Functions.GetIcon("BindableFunction")
 		local node = {
 			Instance = nil,
 			Expanded = false,
@@ -59,7 +59,9 @@ module.New = function()
 			},
 			Highlighted = false,
 			Selected = false,
-			Icon = Functions.GetIcon("BindableFunction"),
+			Icon = icon,
+			IconOffset = offset,
+			IconSize = size,
 			Text = name,
 			Depth = 0,
 			IndentInc = 0,
