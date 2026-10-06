@@ -1,4 +1,4 @@
-
+-- TODO: Theme
 local Lib = require(script.Parent.Parent.Parent.Modules.Enviorment)()
 local Players: Players, TextService: TextService, UserInputService: UserInputService = Lib.Players,Lib.TextService,Lib.UIS
 local funcs = {}
@@ -12,8 +12,8 @@ local function createGui(self)
 			"Frame",
 			{
 				Active = true,
-				BackgroundColor3 = Color3.new(0.14117647707462, 0.14117647707462, 0.14117647707462),
-				BorderColor3 = Color3.new(0.14117647707462, 0.14117647707462, 0.14117647707462),
+				BackgroundColor3 = Lib.Settings.Theme.Syntax.Background,
+				BorderColor3 = Lib.Settings.Theme.Syntax.Background,
 				Name = "Main",
 				Parent = { 1 },
 				Position = UDim2.new(0.5, -100, 0.5, -150),
@@ -25,7 +25,7 @@ local function createGui(self)
 			4,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.new(0.17647059261799, 0.17647059261799, 0.17647059261799),
+				BackgroundColor3 = Lib.Settings.Theme.Main2,
 				Name = "Container",
 				Parent = { 2 },
 				Position = UDim2.new(0, 1, 0, 1),
@@ -38,7 +38,7 @@ local function createGui(self)
 			"ScrollingFrame",
 			{
 				Active = true,
-				BackgroundColor3 = Color3.new(0.20392157137394, 0.20392157137394, 0.20392157137394),
+				BackgroundColor3 = Lib.Settings.Theme.Main1,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				CanvasSize = UDim2.new(0, 0, 0, 0),
@@ -56,7 +56,7 @@ local function createGui(self)
 			8,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.new(0.20392157137394, 0.20392157137394, 0.20392157137394),
+				BackgroundColor3 = Lib.Settings.Theme.Main1,
 				BorderSizePixel = 0,
 				Name = "SearchFrame",
 				Parent = { 4 },
@@ -68,8 +68,8 @@ local function createGui(self)
 			9,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.new(0.14901961386204, 0.14901961386204, 0.14901961386204),
-				BorderColor3 = Color3.new(0.1176470592618, 0.1176470592618, 0.1176470592618),
+				BackgroundColor3 = Lib.Settings.Theme.TextBox,
+				BorderColor3 = Lib.Settings.Theme.Outline3,
 				BorderSizePixel = 0,
 				Name = "SearchContainer",
 				Parent = { 8 },
@@ -86,7 +86,7 @@ local function createGui(self)
 				Font = 3,
 				Name = "SearchBox",
 				Parent = { 9 },
-				PlaceholderColor3 = Color3.new(0.39215689897537, 0.39215689897537, 0.39215689897537),
+				PlaceholderColor3 = Lib.Settings.Theme.PlaceholderText,
 				PlaceholderText = "Search",
 				Position = UDim2.new(0, 4, 0, 0),
 				Size = UDim2.new(1, -8, 0, 18),
@@ -101,7 +101,7 @@ local function createGui(self)
 			12,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.new(0.14117647707462, 0.14117647707462, 0.14117647707462),
+				BackgroundColor3 = Lib.Settings.Theme.Syntax.Background,
 				BorderSizePixel = 0,
 				Name = "Line",
 				Parent = { 8 },
@@ -114,9 +114,9 @@ local function createGui(self)
 			"TextButton",
 			{
 				AutoButtonColor = false,
-				BackgroundColor3 = Color3.new(0.20392157137394, 0.20392157137394, 0.20392157137394),
+				BackgroundColor3 = Lib.Settings.Theme.Main1,
 				BackgroundTransparency = 1,
-				BorderColor3 = Color3.new(0.33725491166115, 0.49019610881805, 0.73725491762161),
+				BorderColor3 = Lib.Settings.Theme.ListSelectionOutline,
 				BorderSizePixel = 0,
 				Font = 3,
 				Name = "Entry",
@@ -140,7 +140,7 @@ local function createGui(self)
 				Position = UDim2.new(0, 24, 0, 0),
 				Size = UDim2.new(1, -24, 1, 0),
 				Text = "Duplicate",
-				TextColor3 = Color3.new(0.86274516582489, 0.86274516582489, 0.86274516582489),
+				TextColor3 = Lib.Settings.Theme.Highlight6,
 				TextSize = 14,
 				TextXAlignment = 0,
 			},
@@ -157,7 +157,7 @@ local function createGui(self)
 				Position = UDim2.new(0, 24, 0, 0),
 				Size = UDim2.new(1, -30, 1, 0),
 				Text = "Ctrl+D",
-				TextColor3 = Color3.new(0.86274516582489, 0.86274516582489, 0.86274516582489),
+				TextColor3 = Lib.Settings.Theme.Highlight6,
 				TextSize = 14,
 				TextXAlignment = 1,
 			},
@@ -182,7 +182,7 @@ local function createGui(self)
 			18,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.new(0.21568629145622, 0.21568629145622, 0.21568629145622),
+				BackgroundColor3 = Lib.Settings.Theme.Outline2,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
 				Name = "Divider",
@@ -196,7 +196,7 @@ local function createGui(self)
 			19,
 			"Frame",
 			{
-				BackgroundColor3 = Color3.new(0.20392157137394, 0.20392157137394, 0.20392157137394),
+				BackgroundColor3 = Lib.Settings.Theme.Main1,
 				BorderSizePixel = 0,
 				Name = "Line",
 				Parent = { 18 },
@@ -542,11 +542,11 @@ end
 
 funcs.ApplyTheme = function(self, data)
 	local theme = self.Theme
-	theme.ContentColor = data.ContentColor or Settings.Theme.Menu
-	theme.OutlineColor = data.OutlineColor or Settings.Theme.Menu
-	theme.DividerColor = data.DividerColor or Settings.Theme.Outline2
-	theme.TextColor = data.TextColor or Settings.Theme.Text
-	theme.HighlightColor = data.HighlightColor or Settings.Theme.Main1
+	theme.ContentColor = data.ContentColor or Lib.Settings.Theme.Menu
+	theme.OutlineColor = data.OutlineColor or Lib.Settings.Theme.Menu
+	theme.DividerColor = data.DividerColor or Lib.Settings.Theme.Outline2
+	theme.TextColor = data.TextColor or Lib.Settings.Theme.Text
+	theme.HighlightColor = data.HighlightColor or Lib.Settings.Theme.Main1
 
 	self.GuiElems.Main.BackgroundColor3 = theme.OutlineColor
 	self.GuiElems.Main.Container.BackgroundColor3 = theme.ContentColor
