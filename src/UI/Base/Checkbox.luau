@@ -67,7 +67,7 @@ local function initGui(self, frame)
 				3,
 				"Frame",
 				{
-					BackgroundColor3 = Color3.new(0.10196078568697, 0.10196078568697, 0.10196078568697),
+					BackgroundColor3 = Enviorment.Settings.Theme.Checkbox,
 					BorderSizePixel = 0,
 					Name = "outline",
 					Parent = { 1 },
@@ -78,7 +78,7 @@ local function initGui(self, frame)
 				4,
 				"Frame",
 				{
-					BackgroundColor3 = Color3.new(0.14117647707462, 0.14117647707462, 0.14117647707462),
+					BackgroundColor3 = Enviorment.Settings.Theme.Syntax.Background,
 					BorderSizePixel = 0,
 					Name = "filler",
 					Parent = { 3 },
@@ -90,7 +90,7 @@ local function initGui(self, frame)
 				5,
 				"Frame",
 				{
-					BackgroundColor3 = Color3.new(0.90196084976196, 0.90196084976196, 0.90196084976196),
+					BackgroundColor3 = Enviorment.Settings.Theme.Highlight7,
 					BorderSizePixel = 0,
 					Name = "top",
 					Parent = { 4 },
@@ -102,7 +102,7 @@ local function initGui(self, frame)
 				"Frame",
 				{
 					AnchorPoint = Vector2.new(0, 1),
-					BackgroundColor3 = Color3.new(0.90196084976196, 0.90196084976196, 0.90196084976196),
+					BackgroundColor3 = Enviorment.Settings.Theme.Highlight7,
 					BorderSizePixel = 0,
 					Name = "bottom",
 					Parent = { 4 },
@@ -114,7 +114,7 @@ local function initGui(self, frame)
 				7,
 				"Frame",
 				{
-					BackgroundColor3 = Color3.new(0.90196084976196, 0.90196084976196, 0.90196084976196),
+					BackgroundColor3 = Enviorment.Settings.Theme.Highlight7,
 					BorderSizePixel = 0,
 					Name = "left",
 					Parent = { 4 },
@@ -126,7 +126,7 @@ local function initGui(self, frame)
 				"Frame",
 				{
 					AnchorPoint = Vector2.new(1, 0),
-					BackgroundColor3 = Color3.new(0.90196084976196, 0.90196084976196, 0.90196084976196),
+					BackgroundColor3 = Enviorment.Settings.Theme.Highlight7,
 					BorderSizePixel = 0,
 					Name = "right",
 					Parent = { 4 },
@@ -172,7 +172,7 @@ local function initGui(self, frame)
 					BackgroundColor3 = Color3.new(1, 1, 1),
 					BackgroundTransparency = 1,
 					Image = "rbxassetid://6401617475",
-					ImageColor3 = Color3.new(0.20784313976765, 0.69803923368454, 0.98431372642517),
+					ImageColor3 = Enviorment.Settings.Theme.ListSelection3,
 					Name = "checkmark2",
 					Parent = { 4 },
 					Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -372,14 +372,15 @@ local function new(style)
 		OnInput = Signal.new(),
 		Style = style or 0,
 		Colors = {
-			Background = c3(36, 36, 36),
-			Primary = c3(49, 176, 230),
-			Secondary = c3(25, 25, 25),
-			Disabled = c3(64, 64, 64),
-			DisabledBackground = c3(52, 52, 52),
-			DisabledCheck = c3(80, 80, 80),
+			Background = Enviorment.Settings.Theme.Syntax.Background,
+			Primary = Enviorment.Settings.Theme.CheckboxPrimary,
+			Secondary = Enviorment.Settings.Theme.CheckboxSecondary,
+			Disabled = Enviorment.Settings.Theme.Highlight3,
+			DisabledBackground = Enviorment.Settings.Theme.Main1,
+			DisabledCheck = Enviorment.Settings.Theme.Highlight2,
 		},
 	}, mt)
+	--print(obj.Colors)
 	initGui(obj)
 	return obj
 end
@@ -389,11 +390,16 @@ local function fromFrame(frame)
 		Toggled = false,
 		Disabled = false,
 		Colors = {
-			Background = c3(36, 36, 36),
-			Primary = c3(49, 176, 230),
-			Secondary = c3(25, 25, 25),
-			Disabled = c3(64, 64, 64),
-			DisabledBackground = c3(52, 52, 52),
+			--Background = c3(36, 36, 36),
+			Background = Enviorment.Settings.Theme.Syntax.Background,
+			--Primary = c3(49, 176, 230),
+			Primary = Enviorment.Settings.Theme.Primary,
+			--Secondary = c3(25, 25, 25),
+			Secondary = Enviorment.Settings.Theme.CheckboxSecondary,
+			--Disabled = c3(64, 64, 64),
+			Disabled = Enviorment.Settings.Theme.Highlight3,
+			--DisabledBackground = c3(52, 52, 52),
+			DisabledBackground = Enviorment.Settings.Theme.Main1,
 		},
 	}, mt)
 	initGui(obj, frame)
