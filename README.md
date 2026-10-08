@@ -39,5 +39,5 @@ API.Apps.Explorer.ViewObject(game.Players.LocalPlayer)
 - [x] Click to Select
 - [ ] Binary SaveInstance Module 
 - [ ] 3D Model Viewer
-- [ ] Settings
+- [x] Settings
 - [x] Plugin API
