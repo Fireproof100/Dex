@@ -295,10 +295,16 @@ module.NewSpy = function()
 
 	-- Hooks
 	local changed = {}
+	local newc = function(...)
+		if Environment.Functions.Support.newcclosure then
+			return Environment.Functions.newcclosure(...)
+		end
+		return ...
+	end
 	RemoteSpy.HookLocal = function()
 		local hookfunction = Environment.Functions.hookfunction
 		local originalFire
-		originalFire = hookfunction(Instance.new("BindableEvent").Fire, function(self, ...)
+		originalFire = hookfunction(Instance.new("BindableEvent").Fire, newc(function(self, ...)
 			local args = {...}
 			local calling_script = Environment.Functions.getcallingscript()
 			RemoteSpy.Log(self, "Local", args, getcallingfunction(),{
@@ -308,10 +314,10 @@ module.NewSpy = function()
 				IsExecutor = Environment.Functions.checkcaller(),
 			})
 			return originalFire(self, ...)
-		end)
+		end))
 
 		local originalInvoke
-		originalInvoke = hookfunction(Instance.new("BindableFunction").Invoke, function(self, ...)
+		originalInvoke = hookfunction(Instance.new("BindableFunction").Invoke, newc(function(self, ...)
 			local args = {...}
 			local calling_script = Environment.Functions.getcallingscript()
 			RemoteSpy.Log(self, "Local", args, getcallingfunction(),{
@@ -321,7 +327,7 @@ module.NewSpy = function()
 				Line = getcallingline(),
 			})
 			return originalInvoke(self, ...)
-		end)
+		end))
 	end
 
 	RemoteSpy.ListenLocal = function()
@@ -358,11 +364,11 @@ module.NewSpy = function()
 
 				local function replacehook()
 					local original = Environment.Functions.getcallbackvalue(b,"OnClientInvoke")
-					local hook = function(...)
+					local hook = newc(function(...)
 						local args = {...}
 						RemoteSpy.Log(b,"Incoming",args,nil)
 						return original(...)
-					end
+					end)
 					Environment.Functions.hookfunction(original,hook)
 
 				end
@@ -414,7 +420,7 @@ module.NewSpy = function()
 		local temp_unremote = Instance.new("UnreliableRemoteEvent")
 		local fire_server
 		local unfire_server
-		local function_for_remote = function(self,...)
+		local function_for_remote = newc(function(self,...)
 			if typeof(self) ~= "Instance" then
 				error("Expected ':' not '.' calling member function FireServer")
 			end
@@ -432,14 +438,14 @@ module.NewSpy = function()
 				return unfire_server(self,...)
 			end
 			return fire_server(self,...)
-		end
+		end)
 		fire_server = Environment.Functions.hookfunction(temp_remote.FireServer,function_for_remote)
 		unfire_server = Environment.Functions.hookfunction(temp_unremote.FireServer,function_for_remote)
 
 
 		local temp_func = Instance.new("RemoteFunction")
 		local invoke_server
-		local function_for_func = function(self,...)
+		local function_for_func = newc(function(self,...)
 			if typeof(self) ~= "Instance" then
 				error("Expected ':' not '.' calling member function InvokeServer")
 			end
@@ -454,7 +460,7 @@ module.NewSpy = function()
 				Source = getcallingsource(),
 			})
 			return invoke_server(self,...)
-		end
+		end)
 		invoke_server = Environment.Functions.hookfunction(temp_func.InvokeServer,function_for_func)
 	end
 	if Environment.Functions.Support.hookfunction then
@@ -466,7 +472,7 @@ module.NewSpy = function()
 		RemoteSpy.ListenIncoming()
 	end
 	if Environment.Functions.Support.hookmetamethod then
-		local old; old = Environment.Functions.hookmetamethod(game,"__newindex",function(self,...)
+		local old; old = Environment.Functions.hookmetamethod(game,"__newindex",newc(function(self,...)
 			if typeof(self) ~= "Instance" then
 				return old(self,...)
 			end
@@ -479,7 +485,7 @@ module.NewSpy = function()
 			else
 				return old(self,...)
 			end
-		end)
+		end))
 	end
 	return RemoteSpy
 end
