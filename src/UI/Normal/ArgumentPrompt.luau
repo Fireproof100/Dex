@@ -22,8 +22,20 @@ funcs.AddArgument = function(self)
 	self.Arguments[index] = box
 end
 
-funcs.Show = function(self)
+funcs.Show = function(self,Defaults)
 	self.GuiElems.Window:Show()
+	if Defaults == nil then
+		return
+	end
+	for i, v in Defaults do
+		if self.Arguments[i] == nil then
+			continue
+		end
+		if typeof(v) ~= "string" or typeof(i) ~= "number" then
+			continue
+		end
+		self.Arguments[i]:SetText(v)
+	end
 end
 
 static.new = function(count)
