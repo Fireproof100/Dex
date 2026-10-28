@@ -1,5 +1,5 @@
 local highlighter = {}
-local Enviorment = require(script.Parent.Enviorment)()
+local Environment = require(script.Parent.Environment)()
 local keywords = {
 	lua = {
 		"and", "break", "or", "else", "elseif", "if", "then", "until", "repeat", "while", "do", "for", "in", "end",
@@ -26,21 +26,21 @@ local keywords = {
 }
 
 local colors = {
-	numbers = Enviorment.Settings.Theme.Syntax.Number or Color3.fromRGB(255, 198, 0),
-	boolean = Enviorment.Settings.Theme.Syntax.Bool or Color3.fromRGB(255, 198, 0),
-	operator = Enviorment.Settings.Theme.Syntax.Operator or Color3.fromRGB(204, 204, 204),
-	lua = Enviorment.Settings.Theme.Syntax.BuiltIn or Color3.fromRGB(132, 214, 247),
-	exploit = Enviorment.Settings.Theme.Syntax.Exploit or Color3.fromRGB(171, 84, 247),
-	rbx = Enviorment.Settings.Theme.Syntax.Keyword,
-	str = Enviorment.Settings.Theme.Syntax.String,
-	comment = Enviorment.Settings.Theme.Syntax.Comment,
-	null = Enviorment.Settings.Theme.Syntax.Nil,
-	call = Enviorment.Settings.Theme.Syntax.LocalMethod,
-	self_call = Enviorment.Settings.Theme.Syntax.LocalMethod,
-	local_color = Enviorment.Settings.Theme.Syntax.Local,
-	function_color = Enviorment.Settings.Theme.Syntax.FunctionName,
-	self_color = Enviorment.Settings.Theme.Syntax.Self,
-	local_property = Enviorment.Settings.Theme.Syntax.LocalProperty,
+	numbers = Environment.Settings.Theme.Syntax.Number or Color3.fromRGB(255, 198, 0),
+	boolean = Environment.Settings.Theme.Syntax.Bool or Color3.fromRGB(255, 198, 0),
+	operator = Environment.Settings.Theme.Syntax.Operator or Color3.fromRGB(204, 204, 204),
+	lua = Environment.Settings.Theme.Syntax.BuiltIn or Color3.fromRGB(132, 214, 247),
+	exploit = Environment.Settings.Theme.Syntax.Exploit or Color3.fromRGB(171, 84, 247),
+	rbx = Environment.Settings.Theme.Syntax.Keyword,
+	str = Environment.Settings.Theme.Syntax.String,
+	comment = Environment.Settings.Theme.Syntax.Comment,
+	null = Environment.Settings.Theme.Syntax.Nil,
+	call = Environment.Settings.Theme.Syntax.LocalMethod,
+	self_call = Environment.Settings.Theme.Syntax.LocalMethod,
+	local_color = Environment.Settings.Theme.Syntax.Local,
+	function_color = Environment.Settings.Theme.Syntax.FunctionName,
+	self_color = Environment.Settings.Theme.Syntax.Self,
+	local_property = Environment.Settings.Theme.Syntax.LocalProperty,
 }
 
 local function createKeywordSet(keywords)
