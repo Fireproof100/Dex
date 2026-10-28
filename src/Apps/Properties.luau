@@ -324,6 +324,7 @@ module.MakeNode = function(Properties,index)
 	Properties.Connected[index] = true
 	local Connections = {}
 	local checkbox2 = Checkbox.new(1)
+	local is_disabled = false
 	local delete_button = Environment.CloseButton()
 	delete_button.Parent = new.ValueFrame
 	delete_button.Position = UDim2.new(1,-delete_button.AbsoluteSize.X,0,delete_button.Position.Y.Offset)
@@ -349,6 +350,18 @@ module.MakeNode = function(Properties,index)
 			new = nil
 			return
 		end
+		local old_disabled = is_disabled
+		if workspace.CurrentCamera.ViewportSize.Y < new.Position.Y.Offset + 20 then
+			is_disabled = true
+		else
+			is_disabled = false
+		end
+
+		if is_disabled then
+			new.Visible = false
+			return
+		end
+		
 		local node = Properties.GetNodeAtIndex(index)
 		if node == nil then
 			new.Visible = false
@@ -760,6 +773,7 @@ module.New = function(Embedded,AppContainer)
 	Properties.MakeVisibleContent = {}
 	Properties.Connected = {}
 	Properties.ActiveNodes = {}
+	Properties.Entries = {}
 	Properties.RegisterCallback = function(f,entry)
 		if entry then
 			local idx = #Properties.Refresh_Callbacks+1
@@ -812,35 +826,48 @@ module.New = function(Embedded,AppContainer)
 		end
 		if s == "string" then return value elseif s == "number" then return tonumber(value) elseif s == "boolean" then return value == "true" end
 	end
-	Properties.GetNodeAtIndex = function(index,nooffset)
+	
+	Properties.GetNodeAtIndex = function(index, nooffset)
 		local final = nooffset == true and index or index + Properties.YOffset
+		local stack = {}
+		local function pushList(list)
+			if not list then return end
+			for i = #list, 1, -1 do
+				stack[#stack + 1] = list[i]
+			end
+		end
+
+		pushList(Properties.Attrib_List)
+		pushList(Properties.Tag_List)
+		pushList(Properties.Node_List)
+
 		local x = 0
-		local s = nil
-		local function OnNode(node)
-			if node == nil then return end
+		while #stack > 0 do
+			local node = table.remove(stack)
+			if node == nil then continue end
 			if node.Category ~= nil then
 				if Properties.ExpandedCategories[node.Category] == false then
-					return
+					continue
 				end
 			end
 			if Properties.SearchText ~= "" and node.IsCategory ~= true then
-				if string.find(string.lower(node.Name),string.lower(Properties.SearchText)) == nil then
-					return
+				if string.find(string.lower(node.Name), string.lower(Properties.SearchText)) == nil then
+					continue
 				end
 			end
-			x = x + 1
+
+			x += 1
 			if x == final then
-				s = node
-				return
+				return node
 			end
 			if node.Expanded and node.Subnodes then
-				for _, v in node.Subnodes do OnNode(v) end
+				for i = #node.Subnodes, 1, -1 do
+					stack[#stack + 1] = node.Subnodes[i]
+				end
 			end
 		end
-		for _, v in Properties.Node_List do OnNode(v) end
-		for _, v in Properties.Tag_List do OnNode(v) end
-		for _, v in Properties.Attrib_List do OnNode(v) end
-		return s
+
+		return nil
 	end
 	Properties.GetIndexOfNode = function(node)
 		local x = 0
@@ -915,8 +942,8 @@ module.New = function(Embedded,AppContainer)
 	end
 	Properties.Refresh = function(instant)
 		Properties.ScrollY.TotalSpace = Properties.GetLength()
-		Properties.ScrollY.VisibleSpace = math.round(Properties.Window.GuiElems.Content.AbsoluteSize.Y / 20) - 5
-		
+		Properties.ScrollY.VisibleSpace = math.round(Properties.Window.GuiElems.Content.AbsoluteSize.Y / 20) - 6
+		Properties.ScrollY:Update()
 		for i, f in Properties.Refresh_Callbacks do
 			if Properties.ActiveNodes[i] == false then continue end
 			if instant then
@@ -1513,9 +1540,14 @@ module.New = function(Embedded,AppContainer)
 		Properties.ShowObjectProperties(objects)
 	end
 	Properties.RemakeNodes = function()
-		for i=1,50 do
-			module.MakeNode(Properties,i)
+		for i=1,Embedded and 20 or 75 do
+			local new = module.MakeNode(Properties,i)
+			Properties.Entries[#Properties.Entries+1] = new
+			if i % 10 then
+				task.wait()
+			end
 		end
+		Properties.Refresh()
 	end
 	
 	Properties.DisplayAddAttributeWindow = function(objects,attribute,is_tag)
@@ -1847,12 +1879,11 @@ module.New = function(Embedded,AppContainer)
 		Properties.TextBoxNode = nil
 		for i, v in Properties.MakeVisibleContent do
 			if v == nil then
-				table.remove(Properties.MakeVisibleContent,i)
 				continue
 			end
 			v.Visible = true
-			table.remove(Properties.MakeVisibleContent,i)
 		end
+		table.clear(Properties.MakeVisibleContent)
 	end)
 
 	Properties.InputTextBox.Focused:Connect(function()
