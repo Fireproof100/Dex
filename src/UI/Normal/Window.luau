@@ -1,6 +1,5 @@
---local Services = require(script.Parent.Parent.Parent.utils.Services)
---local Signal = require(script.Parent.Parent.Parent.Packages.Signal)
-local Lib = require(script.Parent.Parent.Parent.Modules.Enviorment)()
+
+local Lib = require(script.Parent.Parent.Parent.Modules.Environment)()
 local Players: Players, TweenService: TweenService, UserInputService: UserInputService, RunService: RunService = Lib.Players, Lib.TweenS, Lib.UIS, Lib.RunService
 local Signal = require(script.Parent.Parent.Parent.Modules.Signal)
 
@@ -1501,7 +1500,14 @@ static.new = function()
 		OnDeactivate = Signal.new(),
 		OnMinimize = Signal.new(),
 		OnRestore = Signal.new(),
-	}, mt)
+		Changed = Signal.new(),
+	}, {
+		__index = funcs,
+		__newindex = function(s,k,v)
+			rawset(s,k,v)
+			s.Changed:Fire(k,v)
+		end,
+	})
 	obj.Gui = createGui(obj)
 	return obj
 end
