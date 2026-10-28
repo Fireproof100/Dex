@@ -230,7 +230,8 @@ module.NewScriptViewer = function()
 					continue
 				end
 				if Tab.Selected == true then
-					Environment.TweenS:Create(selectionLine,TweenInfo.new(0,Enum.EasingStyle.Linear),{Position = UDim2.new(0,Tab.Gui.Position.X.Offset,0,18)}):Play()
+					--Environment.TweenS:Create(selectionLine,TweenInfo.new(0,Enum.EasingStyle.Linear),{Position = UDim2.new(0,Tab.Gui.Position.X.Offset,0,18)}):Play()
+					selectionLine.Position = UDim2.new(0,Tab.Gui.Position.X.Offset,0,18)
 					selectionLine.Size = UDim2.new(0,Tab.Gui.Size.X.Offset,0,1)
 				end
 				if Tab.Selected == true and new.Frame:GetText() ~= Tab.Source then
