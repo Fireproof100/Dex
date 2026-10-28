@@ -7,8 +7,8 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs
    
  
 # TO-DOs
-- [ ] Rewrite Environment Module
-- [ ] Clean up code
+- [x] Rewrite Environment Module
+- [x] Clean up code
 - [ ] Add credits
 - [x] Console
 - [x] Save Instance Menu
