@@ -1,5 +1,5 @@
 local Signal = require(script.Parent.Parent.Parent.Modules.Signal)
-local Env = require(script.Parent.Parent.Parent.Modules.Enviorment)()
+local Env = require(script.Parent.Parent.Parent.Modules.Environment)()
 local UserInputService: UserInputService = UIS
 
 
