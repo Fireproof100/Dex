@@ -1,6 +1,6 @@
-local Enviorment = require(script.Parent.Parent.Parent.Modules.Enviorment)()
+local Environment = require(script.Parent.Parent.Parent.Modules.Environment)()
 local Signal = require(script.Parent.Parent.Parent.Modules.Signal)
-local Debris: Debris, TweenService: TweenService, UserInputService: UserInputService = Enviorment.service.Debris, Enviorment.TweenS, Enviorment.UIS
+local Debris: Debris, TweenService: TweenService, UserInputService: UserInputService = Environment.service.Debris, Environment.TweenS, Environment.UIS
 local funcs = {}
 local c3 = Color3.fromRGB
 local v2 = Vector2.new
@@ -67,7 +67,7 @@ local function initGui(self, frame)
 				3,
 				"Frame",
 				{
-					BackgroundColor3 = Enviorment.Settings.Theme.Checkbox,
+					BackgroundColor3 = Environment.Settings.Theme.Checkbox,
 					BorderSizePixel = 0,
 					Name = "outline",
 					Parent = { 1 },
@@ -78,7 +78,7 @@ local function initGui(self, frame)
 				4,
 				"Frame",
 				{
-					BackgroundColor3 = Enviorment.Settings.Theme.Syntax.Background,
+					BackgroundColor3 = Environment.Settings.Theme.Syntax.Background,
 					BorderSizePixel = 0,
 					Name = "filler",
 					Parent = { 3 },
@@ -90,7 +90,7 @@ local function initGui(self, frame)
 				5,
 				"Frame",
 				{
-					BackgroundColor3 = Enviorment.Settings.Theme.Highlight7,
+					BackgroundColor3 = Environment.Settings.Theme.Highlight7,
 					BorderSizePixel = 0,
 					Name = "top",
 					Parent = { 4 },
@@ -102,7 +102,7 @@ local function initGui(self, frame)
 				"Frame",
 				{
 					AnchorPoint = Vector2.new(0, 1),
-					BackgroundColor3 = Enviorment.Settings.Theme.Highlight7,
+					BackgroundColor3 = Environment.Settings.Theme.Highlight7,
 					BorderSizePixel = 0,
 					Name = "bottom",
 					Parent = { 4 },
@@ -114,7 +114,7 @@ local function initGui(self, frame)
 				7,
 				"Frame",
 				{
-					BackgroundColor3 = Enviorment.Settings.Theme.Highlight7,
+					BackgroundColor3 = Environment.Settings.Theme.Highlight7,
 					BorderSizePixel = 0,
 					Name = "left",
 					Parent = { 4 },
@@ -126,7 +126,7 @@ local function initGui(self, frame)
 				"Frame",
 				{
 					AnchorPoint = Vector2.new(1, 0),
-					BackgroundColor3 = Enviorment.Settings.Theme.Highlight7,
+					BackgroundColor3 = Environment.Settings.Theme.Highlight7,
 					BorderSizePixel = 0,
 					Name = "right",
 					Parent = { 4 },
@@ -172,7 +172,7 @@ local function initGui(self, frame)
 					BackgroundColor3 = Color3.new(1, 1, 1),
 					BackgroundTransparency = 1,
 					Image = "rbxassetid://6401617475",
-					ImageColor3 = Enviorment.Settings.Theme.ListSelection3,
+					ImageColor3 = Environment.Settings.Theme.ListSelection3,
 					Name = "checkmark2",
 					Parent = { 4 },
 					Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -372,12 +372,12 @@ local function new(style)
 		OnInput = Signal.new(),
 		Style = style or 0,
 		Colors = {
-			Background = Enviorment.Settings.Theme.Syntax.Background,
-			Primary = Enviorment.Settings.Theme.CheckboxPrimary,
-			Secondary = Enviorment.Settings.Theme.CheckboxSecondary,
-			Disabled = Enviorment.Settings.Theme.Highlight3,
-			DisabledBackground = Enviorment.Settings.Theme.Main1,
-			DisabledCheck = Enviorment.Settings.Theme.Highlight2,
+			Background = Environment.Settings.Theme.Syntax.Background,
+			Primary = Environment.Settings.Theme.CheckboxPrimary,
+			Secondary = Environment.Settings.Theme.CheckboxSecondary,
+			Disabled = Environment.Settings.Theme.Highlight3,
+			DisabledBackground = Environment.Settings.Theme.Main1,
+			DisabledCheck = Environment.Settings.Theme.Highlight2,
 		},
 	}, mt)
 	--print(obj.Colors)
@@ -391,15 +391,15 @@ local function fromFrame(frame)
 		Disabled = false,
 		Colors = {
 			--Background = c3(36, 36, 36),
-			Background = Enviorment.Settings.Theme.Syntax.Background,
+			Background = Environment.Settings.Theme.Syntax.Background,
 			--Primary = c3(49, 176, 230),
-			Primary = Enviorment.Settings.Theme.Primary,
+			Primary = Environment.Settings.Theme.Primary,
 			--Secondary = c3(25, 25, 25),
-			Secondary = Enviorment.Settings.Theme.CheckboxSecondary,
+			Secondary = Environment.Settings.Theme.CheckboxSecondary,
 			--Disabled = c3(64, 64, 64),
-			Disabled = Enviorment.Settings.Theme.Highlight3,
+			Disabled = Environment.Settings.Theme.Highlight3,
 			--DisabledBackground = c3(52, 52, 52),
-			DisabledBackground = Enviorment.Settings.Theme.Main1,
+			DisabledBackground = Environment.Settings.Theme.Main1,
 		},
 	}, mt)
 	initGui(obj, frame)
