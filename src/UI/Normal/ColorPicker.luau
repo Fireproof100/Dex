@@ -1,6 +1,6 @@
 -- TODO: Convert to newer class model
 local Signal = require(script.Parent.Parent.Parent.Modules.Signal)
-local Enviorment = require(script.Parent.Parent.Parent.Modules.Enviorment)()
+local Environment = require(script.Parent.Parent.Parent.Modules.Environment)()
 local Window = require(script.Parent.Window)
 local function new()
 	local newMt = setmetatable({}, {})
@@ -14,7 +14,7 @@ local function new()
 			1,
 			"Frame",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.Main2,
+				BackgroundColor3 = Environment.Settings.Theme.Main2,
 				BorderSizePixel = 0,
 				ClipsDescendants = true,
 				Name = "Content",
@@ -55,8 +55,8 @@ local function new()
 			4,
 			"Frame",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.TextBox,
-				BorderColor3 = Enviorment.Settings.Theme.Menu,
+				BackgroundColor3 = Environment.Settings.Theme.TextBox,
+				BorderColor3 = Environment.Settings.Theme.Menu,
 				Name = "Blue",
 				Parent = { 1 },
 				Position = UDim2.new(1, -63, 0, 255),
@@ -67,9 +67,9 @@ local function new()
 			5,
 			"TextBox",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.Highlight3,
+				BackgroundColor3 = Environment.Settings.Theme.Highlight3,
 				BackgroundTransparency = 1,
-				BorderColor3 = Enviorment.Settings.Theme.Highlight4,
+				BorderColor3 = Environment.Settings.Theme.Highlight4,
 				Font = 3,
 				Name = "Input",
 				Parent = { 4 },
@@ -248,7 +248,7 @@ local function new()
 			"ImageLabel",
 			{
 				BackgroundColor3 = Color3.new(1, 1, 1),
-				BorderColor3 = Enviorment.Settings.Theme.Highlight4,
+				BorderColor3 = Environment.Settings.Theme.Highlight4,
 				BorderSizePixel = 0,
 				Image = "rbxassetid://1072518406",
 				Name = "ColorSpace",
@@ -326,8 +326,8 @@ local function new()
 			25,
 			"Frame",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.TextBox,
-				BorderColor3 = Enviorment.Settings.Theme.Menu,
+				BackgroundColor3 = Environment.Settings.Theme.TextBox,
+				BorderColor3 = Environment.Settings.Theme.Menu,
 				Name = "Green",
 				Parent = { 1 },
 				Position = UDim2.new(1, -63, 0, 233),
@@ -338,9 +338,9 @@ local function new()
 			26,
 			"TextBox",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.Highlight3,
+				BackgroundColor3 = Environment.Settings.Theme.Highlight3,
 				BackgroundTransparency = 1,
-				BorderColor3 = Enviorment.Settings.Theme.Highlight4,
+				BorderColor3 = Environment.Settings.Theme.Highlight4,
 				Font = 3,
 				Name = "Input",
 				Parent = { 25 },
@@ -505,8 +505,8 @@ local function new()
 			39,
 			"Frame",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.TextBox,
-				BorderColor3 = Enviorment.Settings.Theme.Menu,
+				BackgroundColor3 = Environment.Settings.Theme.TextBox,
+				BorderColor3 = Environment.Settings.Theme.Menu,
 				Name = "Hue",
 				Parent = { 1 },
 				Position = UDim2.new(1, -180, 0, 211),
@@ -517,9 +517,9 @@ local function new()
 			40,
 			"TextBox",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.Highlight3,
+				BackgroundColor3 = Environment.Settings.Theme.Highlight3,
 				BackgroundTransparency = 1,
-				BorderColor3 = Enviorment.Settings.Theme.Highlight4,
+				BorderColor3 = Environment.Settings.Theme.Highlight4,
 				Font = 3,
 				Name = "Input",
 				Parent = { 39 },
@@ -696,8 +696,8 @@ local function new()
 			54,
 			"Frame",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.TextBox,
-				BorderColor3 = Enviorment.Settings.Theme.Menu,
+				BackgroundColor3 = Environment.Settings.Theme.TextBox,
+				BorderColor3 = Environment.Settings.Theme.Menu,
 				Name = "Red",
 				Parent = { 1 },
 				Position = UDim2.new(1, -63, 0, 211),
@@ -708,9 +708,9 @@ local function new()
 			55,
 			"TextBox",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.Highlight3,
+				BackgroundColor3 = Environment.Settings.Theme.Highlight3,
 				BackgroundTransparency = 1,
-				BorderColor3 = Enviorment.Settings.Theme.Highlight4,
+				BorderColor3 = Environment.Settings.Theme.Highlight4,
 				Font = 3,
 				Name = "Input",
 				Parent = { 54 },
@@ -875,8 +875,8 @@ local function new()
 			68,
 			"Frame",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.TextBox,
-				BorderColor3 = Enviorment.Settings.Theme.Menu,
+				BackgroundColor3 = Environment.Settings.Theme.TextBox,
+				BorderColor3 = Environment.Settings.Theme.Menu,
 				Name = "Sat",
 				Parent = { 1 },
 				Position = UDim2.new(1, -180, 0, 233),
@@ -887,9 +887,9 @@ local function new()
 			69,
 			"TextBox",
 			{
-				BackgroundColor3 = Enviorment.Settings.Theme.Highlight3,
+				BackgroundColor3 = Environment.Settings.Theme.Highlight3,
 				BackgroundTransparency = 1,
-				BorderColor3 = Enviorment.Settings.Theme.Highlight4,
+				BorderColor3 = Environment.Settings.Theme.Highlight4,
 				Font = 3,
 				Name = "Input",
 				Parent = { 68 },
@@ -1387,8 +1387,8 @@ local function new()
 	local greenInput = pickerFrame.Green.Input
 	local blueInput = pickerFrame.Blue.Input
 
-	local user = Enviorment.UIS
-	local mouse = Enviorment.Mouse
+	local user = Environment.UIS
+	local mouse = Environment.Mouse
 
 	local hue, sat, val = 0, 0, 1
 	local red, green, blue = 1, 1, 1
