@@ -1,5 +1,5 @@
 local Signal = require(script.Parent.Parent.Parent.Modules.Signal)
-local Enviorment = require(script.Parent.Parent.Parent.Modules.Enviorment)()
+local Environment = require(script.Parent.Parent.Parent.Modules.Environment)()
 local Window = require(script.Parent.Window)
 local ColorPicker = require(script.Parent.ColorPicker)
 -- TODO: Convert to newer class model
@@ -296,8 +296,8 @@ local function new()
 	local closeButton = pickerFrame.Close
 	local topClose = pickerTopBar.Close
 
-	local user = Enviorment.UIS
-	local mouse = Enviorment.Mouse
+	local user = Environment.UIS
+	local mouse = Environment.Mouse
 
 	local colors = {
 		{ Color3.new(1, 0, 1), 0 },
