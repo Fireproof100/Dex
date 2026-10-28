@@ -12,7 +12,7 @@ function module_metatable.__index(t,k)
 end
 local module = setmetatable({},module_metatable)
 
-module.Version = "2.3.0"
+module.Version = "2.3.3"
 module.DefaultSettings = {
 	Explorer = {
 		_Recurse = true,
@@ -107,28 +107,14 @@ module.DefaultSettings = {
 		},
 	},
 }
-module.Settings = module.DefaultSettings
-for i, setting in module.Settings do
-	setting.Changed = require(script.Parent.Signal).new()
-	module.Settings[i] = setmetatable({},{
-		__index = function(_,k) 
-			return setting[k] 
-		end,
-		__newindex = function(_,k,v) 
-			setting.Changed:Fire(k,v,setting[k]); 
-			setting[k] = v 
-		end,
-		__iter = function()
-			return pairs(setting)
-		end,
-	})
-end
+
 
 module.IsStudio = G2L == nil
 module.env = module
 module.Lib = module
 module.Main = module
 module.fn = module
+module.SavePath = "dexpppp.json"
 -- Enviorment Functions
 module.Functions = require(script.Parent.ExecutorSupport)(module)
 for i, v in module.Functions do
@@ -137,6 +123,8 @@ for i, v in module.Functions do
 	end
 	module[i] = v
 end
+
+
 ---------------------
 module.IsExecutor = function() 
 	return not module.IsStudio 
@@ -747,6 +735,44 @@ module.HasCapability = function(n)
 	end
 	return false
 end
+module.ColorToJSON = function(color : Color3 | {R : number, G : number, B : number},reverse)
+	if reverse then
+		return Color3.new(color.R,color.G,color.B)
+	end
+	return {R = color.R,G = color.G,B = color.B}
+end
+local function serialize(tbl)
+	local result = {}
+	for key, value in tbl do
+		if key == "Changed" then 
+			continue 
+		end
+
+		if typeof(value) == "Color3" then
+			result[key] = module.ColorToJSON(value)
+		elseif typeof(value) == "table" then
+			result[key] = serialize(value)
+		else
+			result[key] = value
+		end
+	end
+	return result
+end
+
+module.SaveSettingsToFile = function()
+	local s = serialize(module.Settings)
+	local success, content = pcall(function()
+		return module.HttpService:JSONEncode(s)
+	end)
+
+	if success then
+		pcall(function()
+			module.Functions.writefile(module.SavePath, content)
+		end)
+	else
+		module.dbg.warn("Failed to encode settings: ",s)
+	end
+end
 -- Services
 module.service = setmetatable({},{__index = function(_,k)
 	return module.Functions.cloneref(game:GetService(k))
@@ -764,6 +790,97 @@ module.CorePackages = module.cloneref(game:GetService("CorePackages")) or Instan
 module.TextService = module.cloneref(game:GetService("TextService"))
 module.MarketplaceService = module.cloneref(game:GetService("MarketplaceService"))
 module.ReplicatedStorage = module.cloneref(game:GetService("ReplicatedStorage"))
+
+-- Settings
+if module.Functions.Support.readfile and module.Functions.Support.writefile then
+	local content;
+	xpcall(function()
+		content = module.Functions.readfile(module.SavePath)
+	end,function()
+		local s = {}
+		for name,group in module.DefaultSettings do
+			local new_group = {}
+			for index,value in group do
+				if typeof(value) == "Color3" then
+					new_group[index] = module.ColorToJSON(value)
+				elseif typeof(value) == "table" then
+					local copy = {}
+					for subindex,subvalue in value do
+						if typeof(subvalue) == "Color3" then
+							copy[subindex] = module.ColorToJSON(subvalue)
+						else
+							copy[subindex] = subvalue
+						end
+					end
+					new_group[index] = copy
+				else
+					new_group[index] = value
+				end
+			end
+			s[name] = new_group
+		end
+		content = module.HttpService:JSONEncode(s)
+		pcall(function()
+			module.Functions.writefile(module.SavePath,content)
+		end)
+	end)
+	local decoded = module.DefaultSettings
+	pcall(function()
+		decoded = module.HttpService:JSONDecode(content)
+	end)
+	local function ontable(tbl)
+		for index,value in tbl do
+			if typeof(value) == "table" then
+				if value.R then
+					tbl[index] = module.ColorToJSON(value,true)
+				else
+					ontable(value)
+				end
+			end
+		end
+	end
+	ontable(decoded)
+	module.Settings = decoded
+else
+	module.Settings = module.DefaultSettings
+end
+
+for i, setting in module.Settings do
+	setting.Changed = require(script.Parent.Signal).new()
+	for i2, sub in setting do
+		if typeof(sub) ~= "table" then continue end
+		if i2 == "Changed" then continue end
+		setting[i2] = setmetatable({},{
+			__index = function(_,k)
+				return sub[k]
+			end,
+			__newindex = function(_,k,v)
+				sub[k] = v
+				setting.Changed:Fire(i2,sub)
+				module.SaveSettingsToFile()
+			end,
+			__iter = function()
+				return pairs(sub)
+			end,
+		})
+	end
+	module.Settings[i] = setmetatable({},{
+		__index = function(_,k) 
+			return setting[k] 
+		end,
+		__newindex = function(_,k,v)
+			setting[k] = v
+			setting.Changed:Fire(k,v,setting[k]); 
+			module.SaveSettingsToFile()
+		end,
+		__iter = function()
+			return pairs(setting)
+		end,
+	})
+	
+	stopmt = false
+end
+
 -- Libraries
 module.dbg = {}
 module.dbg.warn = function(...)
