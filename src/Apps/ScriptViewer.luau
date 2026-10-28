@@ -1,21 +1,21 @@
-local Enviorment = require(script.Parent.Parent.Modules.Enviorment)()
+local Environment = require(script.Parent.Parent.Modules.Environment)()
 local SSI = require(script.Parent.Parent.UI.Normal.SSI)
 local SaveInstanceWindow = SSI.new()
 local module = {}
 
-module.CloseButton = Enviorment.CloseButton
+module.CloseButton = Environment.CloseButton
 module.NewTab = function()
 	local new;
 	local elems = {}
 	elems["Frame"] = Instance.new("Frame")
 	elems["Frame"].Size = UDim2.new(0,56,0,18)
-	elems["Frame"].BackgroundColor3 = Enviorment.Settings.Theme.Outline1
+	elems["Frame"].BackgroundColor3 = Environment.Settings.Theme.Outline1
 	elems["Frame"].BorderSizePixel = 0
 	elems["TextButton"] = Instance.new("TextButton")
 	elems["TextButton"].BackgroundTransparency = 1
 	elems["TextButton"].Position = UDim2.new(0, 0, 0, 0)
 	elems["TextButton"].Size = UDim2.new(1,-16, 1,0)
-	elems["TextButton"].TextColor3 = Enviorment.Settings.Theme.Text
+	elems["TextButton"].TextColor3 = Environment.Settings.Theme.Text
 	elems["TextButton"].Parent = elems["Frame"]
 	elems["TextButton"].FontFace = Font.fromName("SourceSansPro")
 	elems["TextButton"].TextSize = 14
@@ -32,7 +32,7 @@ module.NewTab = function()
 	end)
 	local function Update()
 		elems["TextButton"].Text = new.Text
-		elems["Frame"].Size = UDim2.new(0,Enviorment.GetTextSize(new.Text).X + 30,0,18)
+		elems["Frame"].Size = UDim2.new(0,Environment.GetTextSize(new.Text).X + 30,0,18)
 	end
 	new = setmetatable({
 		Text = "",
@@ -41,7 +41,6 @@ module.NewTab = function()
 		Update = Update,
 	},{__newindex = function(s,k,v)
 		rawset(s,k,v)
-		print("changed __newindex",s,k,v)
 		Update()
 		return nil
 	end,})
@@ -77,7 +76,7 @@ module.NewScriptViewer = function()
 		for _, tab in Tabs do
 			if tab.Selected ~= true then continue end	
 		
-			pcall(Enviorment.Functions.setclipboard, tab.Source)
+			pcall(Environment.Functions.setclipboard, tab.Source)
 			return
 		end
 	end)
@@ -94,8 +93,10 @@ module.NewScriptViewer = function()
 	execButton.MouseButton1Click:Connect(function()
 		for _, tab in Tabs do
 			if tab.Selected ~= true then continue end	
-
-			pcall(loadstring, tab.Source)()
+			local s,f = pcall(loadstring, tab.Source)
+			if s then
+				f()
+			end
 			return
 		end
 	end)
@@ -115,7 +116,7 @@ module.NewScriptViewer = function()
 	SaveInstanceWindow.OnSave:Connect(function(path)
 		for _, tab in Tabs do
 			if tab.Selected ~= true then continue end
-			Enviorment.Functions.writefile(path,tab.Source)
+			Environment.Functions.writefile(path,tab.Source)
 			return
 		end
 		
@@ -145,16 +146,11 @@ module.NewScriptViewer = function()
 				if tab.Gui.Parent == nil then continue end
 				local idx = table.find(Tabs,newTab) or idx
 				if i >= idx then continue end
-				print("b offset",xoffset)
 				xoffset = xoffset + tab.Gui.Size.X.Offset + 3
-				print("new offset",xoffset)
 			end
-			if true then
-				first = false
-				newTab.Gui.Position = UDim2.new(0,xoffset,0,1)
-			--else
-				--Enviorment.TweenS:Create(new.Gui,TweenInfo.new(0.25),{Position = UDim2.new(0,xoffset,0,1)}):Play()
-			end
+			first = false
+			newTab.Gui.Position = UDim2.new(0,xoffset,0,1)
+			--Enviorment.TweenS:Create(new.Gui,TweenInfo.new(0.25),{Position = UDim2.new(0,xoffset,0,1)}):Play()
 			
 		end
 		for _, tab in Tabs do
@@ -163,14 +159,13 @@ module.NewScriptViewer = function()
 		newTab.Script = Script
 		newTab.Modifiable = false
 		newTab.Selected = true
-		newTab.Source = Enviorment.Functions.decompile(Script)
+		newTab.Source = Environment.Functions.decompile(Script)
 		newTab.Update = Hook
 		newTab.Hook = Hook
 		Hook()
 		new.Frame:SetText(newTab.Source)
 		
 		local x = newTab.Gui.Position.X.Offset + newTab.Gui.Size.X.Offset
-		print(x,new.Window.GuiElems.Content.AbsoluteSize.X)
 		if x > new.Window.GuiElems.Content.AbsoluteSize.X then
 			
 			idx = #Tabs
@@ -231,7 +226,7 @@ module.NewScriptViewer = function()
 					continue
 				end
 				if Tab.Selected == true then
-					Enviorment.TweenS:Create(selectionLine,TweenInfo.new(0.25,Enum.EasingStyle.Linear),{Position = UDim2.new(0,Tab.Gui.Position.X.Offset,0,18)}):Play()
+					Environment.TweenS:Create(selectionLine,TweenInfo.new(0,Enum.EasingStyle.Linear),{Position = UDim2.new(0,Tab.Gui.Position.X.Offset,0,18)}):Play()
 					selectionLine.Size = UDim2.new(0,Tab.Gui.Size.X.Offset,0,1)
 				end
 				if Tab.Selected == true and new.Frame:GetText() ~= Tab.Source then
@@ -248,7 +243,7 @@ module.NewScriptViewer = function()
 end
 module.Init = function()
 	local new = module.NewScriptViewer()
-	Enviorment.AppSignal:Connect(function(app,...)
+	Environment.AppSignal:Connect(function(app,...)
 		if app ~= script.Name then
 			return
 		end
