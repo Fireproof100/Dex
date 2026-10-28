@@ -29,7 +29,6 @@ function funcs:Display(label, index)
 	end
 end
 function funcs:GetDisplayInfo(index)
-	print(index)
 	if index == nil then
 		return self.MapId, Vector2.new(0, 0), Vector2.new(0, 0)
 	end
@@ -57,7 +56,6 @@ local mt = {}
 mt.__index = funcs
 
 local function new(mapId, mapSizeX, mapSizeY, iconSizeX, iconSizeY)
-	print(mapId,mapSizeX,mapSizeY,iconSizeX,iconSizeY)
 	local obj = setmetatable({
 		MapId = mapId,
 		MapSizeX = mapSizeX,
