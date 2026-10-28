@@ -1,5 +1,5 @@
 -- TODO: Theme
-local Lib = require(script.Parent.Parent.Parent.Modules.Enviorment)()
+local Lib = require(script.Parent.Parent.Parent.Modules.Environment)()
 local Players: Players, TextService: TextService, UserInputService: UserInputService = Lib.Players,Lib.TextService,Lib.UIS
 local funcs = {}
 local mouse
