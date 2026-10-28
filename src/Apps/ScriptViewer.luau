@@ -159,7 +159,11 @@ module.NewScriptViewer = function()
 		newTab.Script = Script
 		newTab.Modifiable = false
 		newTab.Selected = true
-		newTab.Source = Environment.Functions.decompile(Script)
+		local decomp =  Environment.Functions.decompile(Script)
+		if decomp == nil then
+			decomp = "--[[No usable bytecode available]]"
+		end
+		newTab.Source = decomp
 		newTab.Update = Hook
 		newTab.Hook = Hook
 		Hook()
