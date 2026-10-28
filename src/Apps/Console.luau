@@ -2,7 +2,7 @@
 	Console Module
 ]]
 
-local Enviorment = require(script.Parent.Parent.Modules.Enviorment)()
+local Environment = require(script.Parent.Parent.Modules.Environment)()
 local module = {}
 local Window = require(script.Parent.Parent.UI.Normal.Window)
 local Frame = require(script.Parent.Parent.UI.Base.Frame)
@@ -43,7 +43,7 @@ module.New = function()
 	G2L["3"] = Frame.new().Gui--Instance.new("Frame", ConsoleFrame);
 	G2L["3"].Parent = ConsoleFrame
 	G2L["3"]["BorderSizePixel"] = 0;
-	G2L["3"]["BackgroundColor3"] = Enviorment.Settings.Theme.Main3;
+	G2L["3"]["BackgroundColor3"] = Environment.Settings.Theme.Main3;
 	G2L["3"]["AnchorPoint"] = Vector2.new(0.5, 1);
 	G2L["3"]["ClipsDescendants"] = true;
 	G2L["3"]["Size"] = UDim2.new(1, -8, 0, 22);
@@ -766,7 +766,7 @@ module.New = function()
 				print("> "..text)
 				local f = loadstring(text)
 				setfenv(f,setmetatable({
-					API = Enviorment.PluginAPI,
+					API = Environment.PluginAPI,
 				},{
 					__index = getfenv()
 				}))
