@@ -1,5 +1,5 @@
 local module = {}
-local Enviornment = require(script.Parent.Parent.Modules.Enviorment)()
+local Enviornment = require(script.Parent.Parent.Modules.Environment)()
 local propertiesMod = require(script.Parent.Properties)
 module.New = function()
 	local settings = {
