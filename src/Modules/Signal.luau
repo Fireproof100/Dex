@@ -1,34 +1,4 @@
 local module = {}
--- TODO: Make better
---module.new = function()
---	return {
---		Callbacks = {},
---		Firing = false,
---		Connect = function(s,f)
---			if typeof(s) ~= "table" then error("No.") end
---			local idx = #s.Callbacks+1
---			s.Callbacks[idx] = f
---			return {
---				Disconnect = function()
---					s.Callbacks[idx] = nil
---				end,
---			}
---		end,
---		Fire = function(s,...)
---			if typeof(s) ~= "table" then error("No.") end
---			s.Firing = true
---			task.wait()
---			for i, v in s.Callbacks do
---				task.spawn(v,...)
---			end
---			s.Firing = false
---		end,
---		Wait = function(s)
---			if typeof(s) ~= "table" then error("No.") end
---			repeat task.wait() until s.Firing == true
---		end,
---	}
---end
 module.new = function()
 	local Signal = setmetatable({__type = "Signal"},{__type = "Signal",__metatable = "Locked"})
 	Signal.Firing = false
@@ -55,8 +25,9 @@ module.new = function()
 			if self ~= Connection then
 				Signal.MemberError()
 			end
-			table.remove(Connection.Signal.Callbacks,Connection.idx)
-			table.remove(Connection.Signal.Connections,Connection.idx)
+			Connection.Signal.Callbacks[Connection.idx] = nil
+			Connection.Signal.Connections[Connection.idx] = nil
+			Connection.Connected = false
 		end
 		Connection.Disable = function(self)
 			if self ~= Connection then
@@ -86,7 +57,14 @@ module.new = function()
 		if self ~= Signal then
 			Signal.MemberError()
 		end
-		repeat task.wait() until Signal.Firing == true
+		local fired = false
+		local con = Signal.Connect(Signal,function()
+			fired = true
+		end)
+		while fired == false do
+			task.wait()
+		end
+		con.Disconnect(con)
 	end
 	Signal.FireInstant = function(self,...)
 		if self ~= Signal then
