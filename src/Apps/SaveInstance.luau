@@ -3,7 +3,7 @@
 	
 	Revival of the old dex's Save Instance
 ]] 
-local Enviorment = require(script.Parent.Parent.Modules.Enviorment)()
+local Environment = require(script.Parent.Parent.Modules.Environment)()
 local Label = require(script.Parent.Parent.UI.Base.Label)
 local Checkbox = require(script.Parent.Parent.UI.Base.Checkbox)
 local Frame = require(script.Parent.Parent.UI.Base.Frame)
@@ -17,7 +17,7 @@ module.New = function()
 	local new = {}
 	local window, ListFrame
 	local placeName = "Place_"..game.PlaceId
-	pcall(function() placeName = Enviorment.MarketplaceService:GetProductInfo(game.PlaceId).Name end)
+	pcall(function() placeName = Environment.MarketplaceService:GetProductInfo(game.PlaceId).Name end)
 	local fileName = placeName .. "_{TIMESTAMP}"
 	local Saving = false
 
@@ -82,10 +82,10 @@ module.New = function()
 
 		-- Textbox
 		local textbox = Instance.new("TextBox") -- replaced cuz why Moon make every inputs only work on mouse/pc users >:( 
-		textbox.BackgroundColor3 = Enviorment.Settings.Theme.TextBox
-		textbox.BorderColor3 = Enviorment.Settings.Theme.Outline3
+		textbox.BackgroundColor3 = Environment.Settings.Theme.TextBox
+		textbox.BorderColor3 = Environment.Settings.Theme.Outline3
 		textbox.ClearTextOnFocus = false
-		textbox.TextColor3 = Enviorment.Settings.Theme.Text
+		textbox.TextColor3 = Environment.Settings.Theme.Text
 		textbox.Font = Enum.Font.SourceSans
 		textbox.TextSize = 14
 		textbox.ZIndex = 2
@@ -261,7 +261,7 @@ module.New = function()
 			
 			window:SetTitle("Save Instance - Saving")
 			SaveInstance.FileName = fileName
-			local s, result = pcall(Enviorment.Functions.saveinstance,SaveInstanceArgs)
+			local s, result = pcall(Environment.Functions.saveinstance,SaveInstanceArgs)
 			if s then
 				window:SetTitle("Save Instance - Saved")
 			else
