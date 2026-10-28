@@ -1,4 +1,4 @@
-local Enviorment = require(script.Parent.Parent.Parent.Modules.Enviorment)()
+local Environment = require(script.Parent.Parent.Parent.Modules.Environment)()
 local Signal = require(script.Parent.Parent.Parent.Modules.Signal)
 
 local Button = {}
@@ -11,21 +11,21 @@ function Button.new(mode : number?)
 
 	
 	b.AutoButtonColor = false
-	b.TextColor3 = Enviorment.Settings.Theme.Text
+	b.TextColor3 = Environment.Settings.Theme.Text
 	b.TextTransparency = 0.1
 	b.Size = UDim2.new(0, 100, 0, 20)
 	b.Font = Enum.Font.SourceSans
 	b.TextSize = 14
-	b.BackgroundColor3 = Enviorment.Settings.Theme.Button
-	b.BorderColor3 = Enviorment.Settings.Theme.Outline2
+	b.BackgroundColor3 = Environment.Settings.Theme.Button
+	b.BorderColor3 = Environment.Settings.Theme.Outline2
 
 	self.Gui = b
-	self.Anim = Enviorment.ButtonAnim(b, {
+	self.Anim = Environment.ButtonAnim(b, {
 		Mode = mode or 2,
-		StartColor = Enviorment.Settings.Theme.Button,
-		HoverColor = Enviorment.Settings.Theme.ButtonHover,
-		PressColor = Enviorment.Settings.Theme.ButtonPress,
-		OutlineColor = Enviorment.Settings.Theme.Outline2,
+		StartColor = Environment.Settings.Theme.Button,
+		HoverColor = Environment.Settings.Theme.ButtonHover,
+		PressColor = Environment.Settings.Theme.ButtonPress,
+		OutlineColor = Environment.Settings.Theme.Outline2,
 	})
 	self.Disabled = false
 	self.OnClick = Signal.new()
