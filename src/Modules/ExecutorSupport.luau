@@ -1,8 +1,9 @@
-local function load(Enviornment)
-	local IsStudio = Enviornment.IsSudio
+local function load(Environment)
+	local IsStudio = Environment.IsStudio
 	local loadstring_roblox = loadstring
 	local loadstring = IsStudio and require(workspace.vLuau) or loadstring_roblox
 	local module = {}
+	local nil_instances = {Instance.new("Part"),Instance.new("LocalScript"),Instance.new("RemoteEvent")}
 	module.Support = {}
 	module.Messages = {
 
@@ -17,7 +18,7 @@ local function load(Enviornment)
 			if scr == nil then
 				return true
 			end
-			if scr:IsDescendantOf(Enviornment.CoreGui) or scr:IsDescendantOf(Enviornment.CorePackages) then
+			if scr:IsDescendantOf(Environment.CoreGui) or scr:IsDescendantOf(Environment.CorePackages) then
 				return true
 			end
 			return false
@@ -36,18 +37,22 @@ local function load(Enviornment)
 		restorefunction = function()
 			
 		end,
+		getscriptbytecode = function()
+			return ""
+		end,
 		cloneref = function(...)
 			return (...)
 		end,
 		setclipboard = function(v)
-			if IsStudio then
-				warn("[setclipboard] ",v)
-			end
+			Environment.dbg.warn("[setclipboard] ",v)
 		end,
 		protectgui = function(gui)
 			gui.Parent = script.Parent.Parent
 		end,
 		getnilinstances = function()
+			if IsStudio then
+				return nil_instances
+			end
 			return {}
 		end,
 		writefile = function()
@@ -64,7 +69,7 @@ local function load(Enviornment)
 				return res
 			end
 			local s2,res2 = pcall(function(...)
-				return Enviornment.HttpService:GetAsync(...)
+				return Environment.HttpService:GetAsync(...)
 			end,...)
 			if s2 then
 				return res2
@@ -93,7 +98,7 @@ local function load(Enviornment)
 				end
 				return source;
 			end
-			if module.getscriptbytecode == nil then
+			if getscriptbytecode == nil then
 				return "-- Missing function 'getscriptbytecode'"
 			else 
 				return "-- Missing function 'decompile'"
@@ -118,7 +123,7 @@ local function load(Enviornment)
 				return Metamethod
 			elseif method == "__namecall" then
 				local _, Metamethod = xpcall(function()
-					object:Mustard()
+					object:namecall()
 				end, function(err)
 					return debug.info(2, "f")
 				end)
@@ -130,22 +135,19 @@ local function load(Enviornment)
 		end,
 		gethiddenproperty = function(obj,name)
 			local s,res = pcall(function()
-				return Enviornment.services.UGCValidationService:GetPropertyValue(obj,name)
+				return Environment.services.UGCValidationService:GetPropertyValue(obj,name)
 			end)
 			if s then
 				return res
 			end
 			return obj[name]
 		end,
-		sethiddenproperty = function(obj,name,value)
-			obj[name] = value
-		end,
 		getcallbackvalue = function()
 			return nil
 		end,
 		gethui = function()
-			if Enviornment.IsElevated() then
-				return Enviornment.CoreGui
+			if Environment.IsElevated() then
+				return Environment.CoreGui
 			else
 				return script.Parent.Parent.Parent
 			end
@@ -154,6 +156,34 @@ local function load(Enviornment)
 			return _G
 		end,
 		loadstring = loadstring,
+		["debug.getupvalue"] = function()
+			return nil
+		end,
+		["debug.getupvalues"] = function()
+			return {}
+		end,
+		["debug.setupvalue"] = function()
+			return nil
+		end,
+		["debug.getproto"] = function(func,index,active)
+			if active then
+				return {func}
+			else
+				return func
+			end
+		end,
+		["debug.getprotos"] = function()
+			return {}
+		end,
+		["debug.getconstant"] = function()
+			return nil
+		end,
+		["debug.getconstants"] = function()
+			return {}
+		end,
+		["debug.setconstant"] = function()
+			return nil
+		end,
 	}
 	local TEST_EXISTENCE_ONLY = function(v)
 		assert(v,"Function does not exist")
@@ -414,14 +444,88 @@ local function load(Enviornment)
 		local s,_ = pcall(loadstring_roblox,"local a = 10;")
 		assert(s,"loadstring() is not available")
 	end)
+	Test("decompile",decompile,TEST_EXISTENCE_ONLY)
+	Test("getscriptbytecode",getscriptbytecode,TEST_EXISTENCE_ONLY)
+	Test("saveinstance",saveinstance,TEST_EXISTENCE_ONLY)
+	
+	Test("debug.getupvalue",debug.getupvalue,TEST_EXISTENCE_ONLY,true)
+	Test("debug.getupvalues",debug.getupvalues,TEST_EXISTENCE_ONLY,true)
+	Test("debug.setupvalue",debug.setupvalue,TEST_EXISTENCE_ONLY,true)
+	
+	Test("debug.getproto",debug.getproto,TEST_EXISTENCE_ONLY,true)
+	Test("debug.getprotos",debug.getprotos,TEST_EXISTENCE_ONLY,true)
+	
+	Test("debug.getconstant",debug.getconstant,TEST_EXISTENCE_ONLY,true)
+	Test("debug.getconstants",debug.getconstant,TEST_EXISTENCE_ONLY,true)
+	Test("debug.setconstant",debug.setconstant,TEST_EXISTENCE_ONLY,true)
+	Test("gethiddenproperty",gethiddenproperty,function()
+		local Confidential = gethiddenproperty(script,"Confidential")
+		if typeof(Confidential) ~= " boolean" then
+			error("Unable to read ModuleScript.Confidential")
+		end
+	end)
+	Test("sethiddenproperty",sethiddenproperty,function()
+		if gethiddenproperty == nil then
+			error("Missing dependency 'gethiddenproperty'")
+		end
+		sethiddenproperty(script,"Confidential",true)
+		if gethiddenproperty(script,"Confidential") ~= true then
+			error("Unable to write ModuleScript.Confidential")
+		end
+	end)
 	local function Add(name)
 		if module.Support[name] == true then
 			local f = getfenv()[name]
-			module[name] = f
+			if string.find(name,".") then
+				local split = string.split(name,".")
+				local current = module
+				for i, cut in split do
+					if i == #split then
+						current[cut] = f
+					else
+						current[cut] = current[cut] or {}
+						current = current[cut]
+					end
+				end
+			else
+				module[name] = f
+			end
+			
 		else
-			module[name] = module.Fallbacks[name] or function(...) return (...) end
+			if string.find(name,".") then
+				local split = string.split(name,".")
+				local current = module
+				for i, cut in split do
+					if cut == "debug" then
+						cut = "sdebug"
+					end
+					if i == #split then
+						if module.Fallbacks[name] then
+							module.Support[name] = true
+						end
+						current[cut] = module.Fallbacks[name] or function(...) return (...) end
+					else
+						current[cut] = current[cut] or {}
+						current = current[cut]
+					end
+				end
+			else
+				module[name] = module.Fallbacks[name] or function(...) return (...) end
+			end
 		end
 	end
+	
+	Add("debug.getupvalue")
+	Add("debug.getupvalues")
+	Add("debug.setupvalue")
+	
+	Add("debug.getproto")
+	Add("debug.getprotos")
+	
+	Add("debug.getconstant")
+	Add("debug.getconstants")
+	Add("debug.setconstant")
+	
 	Add("newcclosure")
 	Add("iscclosure")
 	Add("islclosure")
