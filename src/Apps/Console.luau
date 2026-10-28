@@ -693,7 +693,7 @@ module.New = function()
 		end)
 
 		local focussedOutput
-
+		local conns = {}
 		LogService.MessageOut:Connect(function(msg, msgtype)
 			local formattedText = ""
 			local unformattedText = ""
@@ -704,6 +704,12 @@ module.New = function()
 				local oldest = table.remove(displayedOutput, 1)
 				if oldest and typeof(oldest) == "Instance" then
 					oldest:Destroy()
+				end
+				local oldestcon = table.remove(conns,1)
+				if oldestcon ~= nil then
+					pcall(function()
+						oldestcon:Disconnect()
+					end)
 				end
 			end
 
@@ -723,7 +729,7 @@ module.New = function()
 			end
 
 			newOutputText.TextSize = OutputTextSize.Value
-			OutputTextSize:GetPropertyChangedSignal("Value"):Connect(function()
+			conns[#conns+1] = OutputTextSize:GetPropertyChangedSignal("Value"):Connect(function()
 				newOutputText.TextSize = OutputTextSize.Value
 			end)
 
