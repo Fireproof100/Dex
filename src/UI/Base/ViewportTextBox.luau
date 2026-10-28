@@ -1,4 +1,4 @@
-require(script.Parent.Parent.Parent.Modules.Enviorment)()
+require(script.Parent.Parent.Parent.Modules.Environment)()
 
 local textService = TextService
 
