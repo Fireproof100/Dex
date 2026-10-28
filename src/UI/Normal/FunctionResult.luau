@@ -29,6 +29,10 @@ funcs.Display = function(self,data)
 	self.Arguments["Result"]:SetText(Functions.Value_To_Luau(data.Result))
 	self.Arguments["Success"]:SetText(Functions.Value_To_Luau(data.Success))
 end
+funcs.DisplayAndShow = function(self,data)
+	self:Display(data)
+	self:Show()
+end
 static.new = function()
 	local obj;
 	obj = setmetatable({
