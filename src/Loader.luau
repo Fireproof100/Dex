@@ -178,6 +178,10 @@ local s = {
 				end)
 			end
 		end
+		local UpdateMainGui = function(MainMenu)
+			MainMenu.OpenButton.MainFrame.Size = UDim2.new(0,Environment.Settings.Loader.WideMenu == true and 300 or 224,0,200)
+			MainMenu.OpenButton.MainFrame.AppsFrame.Size = UDim2.new(0,Environment.Settings.Loader.WideMenu == true and 300 - 2 or 222,1,-25)
+		end
 		local CreateMainGui = function()
 			local gui = create({
 				{1,"ScreenGui",{IgnoreGuiInset=true,Name="MainMenu",}},
@@ -289,8 +293,12 @@ local s = {
 			
 			--Lib.ShowGui(gui)
 			gui.Parent = script.Parent
+			return gui
 		end
-		CreateMainGui()
+		local main_gui = CreateMainGui()
+		Environment.Settings.Loader.Changed:Connect(function()
+			UpdateMainGui(main_gui)
+		end)
 		Environment.AppSignal:Connect(function(appName,callback)
 			if appName == "Loader" then
 				return callback(Apps,Main)
