@@ -132,6 +132,9 @@ module.fn = module
 -- Enviorment Functions
 module.Functions = require(script.Parent.ExecutorSupport)(module)
 for i, v in module.Functions do
+	if i == "debug" then
+		continue
+	end
 	module[i] = v
 end
 ---------------------
