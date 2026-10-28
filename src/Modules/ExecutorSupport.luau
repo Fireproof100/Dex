@@ -55,12 +55,6 @@ local function load(Environment)
 			end
 			return {}
 		end,
-		writefile = function()
-			
-		end,
-		readfile = function()
-			
-		end,
 		HttpGet = function(...)
 			local s,res = pcall(function(...)
 				return game:HttpGet(...)
@@ -464,6 +458,8 @@ local function load(Environment)
 			error("Unable to read ModuleScript.Confidential")
 		end
 	end)
+	Test("readfile",readfile,TEST_EXISTENCE_ONLY)
+	Test("writefile",writefile,TEST_EXISTENCE_ONLY)
 	Test("sethiddenproperty",sethiddenproperty,function()
 		if gethiddenproperty == nil then
 			error("Missing dependency 'gethiddenproperty'")
@@ -539,6 +535,9 @@ local function load(Environment)
 	Add("getrawmetatable")
 	Add("getcallbackvalue")
 	Add("getnilinstances")
+	
+	Add("readfile")
+	Add("writefile")
 	
 	Add("sethiddenproperty")
 	Add("gethiddenproperty")
