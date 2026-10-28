@@ -1,4 +1,4 @@
-local Enviorment = require(script.Parent.Parent.Parent.Modules.Enviorment)()
+local Environment = require(script.Parent.Parent.Parent.Modules.Environment)()
 local Signal = require(script.Parent.Parent.Parent.Modules.Signal)
 local funcs = {
 	Gui = newproxy(),
@@ -81,8 +81,8 @@ local function new()
 	button.AutoButtonColor = false
 	button.Text = ""
 	button.Size = UDim2.new(0, 100, 0, 20)
-	button.BackgroundColor3 = Enviorment.Settings.Theme.TextBox
-	button.BorderColor3 = Enviorment.Settings.Theme.Outline3
+	button.BackgroundColor3 = Environment.Settings.Theme.TextBox
+	button.BorderColor3 = Environment.Settings.Theme.Outline3
 	button.Name = "DropDown"
 	local label = require(script.Parent.Parent.Base.Label).new()
 	label.Position = UDim2.new(0, 2, 0, 0)
@@ -140,7 +140,7 @@ local function new()
 	obj.Gui = button
 	obj.Anim = Lib.ButtonAnim(
 		button,
-		{ Mode = 2, StartColor = Enviorment.Settings.Theme.TextBox, LerpTo = Enviorment.Settings.Theme.Button, LerpDelta = 0.15 }
+		{ Mode = 2, StartColor = Environment.Settings.Theme.TextBox, LerpTo = Environment.Settings.Theme.Button, LerpDelta = 0.15 }
 	)
 	obj.Context = require(script.Parent.ContextMenu).new()
 	obj.Context.Iconless = true
