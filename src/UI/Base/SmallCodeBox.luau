@@ -20,7 +20,7 @@ static.new = function()
 	local textbox = ViewportTextBox.new()
 	local int_box = textbox.TextBox
 	local new_label = Instance.new("TextLabel")
-	task.spawn(function()
+	local thread1 = task.spawn(function()
 		while task.wait(0.1) and textbox.Parent ~= nil do
 			for _, prop in {"FontFace","TextSize","Size","Position","Parent","TextWrapped","TextStrokeTransparency","TextStrokeColor3","TextColor3","TextScaled","Visible"} do
 				new_label[prop] = int_box[prop]
@@ -30,11 +30,17 @@ static.new = function()
 	int_box.TextEditable = true
 	int_box.TextTransparency = 0.2
 	new_label.RichText = true
-	task.spawn(function()
+	local thread2 = task.spawn(function()
 		while task.wait() and textbox.Parent ~= nil do
 			new_label.Text = highlighter.run(int_box.Text)
 		end
 	end)
+	
+	new_label.Destroying:Once(function()
+		task.cancel(thread1)
+		task.cancel(thread2)
+	end)
+	
 	new_label.TextXAlignment = Enum.TextXAlignment.Left
 	new_label.BackgroundTransparency = 1
 	--textbox.BackgroundTransparency =1 
