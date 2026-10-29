@@ -214,7 +214,7 @@ module.GetPropertyData = function(obj,prop)
 	end
 	if not writable and Environment.Functions.Support.sethiddenproperty then
 		writable,_ = pcall(function()
-			return Environment.Functions.sethiddenproperty(obj,prop, Environment.Functions.Support.gethiddenproperty(obj,prop))
+			return Environment.Functions.sethiddenproperty(obj,prop, Environment.Functions.gethiddenproperty(obj,prop))
 		end)
 	end
 	return readable,writable
