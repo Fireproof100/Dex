@@ -50,10 +50,17 @@ local s = {
 			Intro.SetProgress("Loading App: " .. v.Name,1/(AppsL + 2)*(i+2))
 			local result = {}
 			
+			local content = require(v)
+			if content.Beta and LoadSettings.Beta ~= true then
+				Intro.SetProgress("Skipped App: " .. v.Name,1/(AppsL+2)*(i+2))
+				task.wait(0.25)
+				continue
+			end
+			
 			if Environment.IsStudio then
-				result = table.pack(true,require(v).Init())
+				result = table.pack(true,content.Init())
 			else
-				result = table.pack(pcall(require(v).Init))
+				result = table.pack(pcall(content.Init))
 			end
 			
 			Apps[v.Name] = result[2];
