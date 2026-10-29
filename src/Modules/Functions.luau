@@ -200,10 +200,17 @@ module.Value_To_Luau = function(...)
 	return tostring(value)
 end
 module.GetPropertyData = function(obj,prop)
+	local no_write_tests = false
+	if obj:IsA("BaseScript") or obj:IsA("ModuleScript") then
+		if prop == "Source" or prop == "LinkedSource" then
+			no_write_tests = true
+		end
+	end
 	local readable, _ = pcall(function()
 		return obj[prop]
 	end)
 	local writable,_ = pcall(function()
+		assert(not no_write_tests)
 		obj[prop] = obj[prop]
 	end)
 	
@@ -214,6 +221,7 @@ module.GetPropertyData = function(obj,prop)
 	end
 	if not writable and Environment.Functions.Support.sethiddenproperty then
 		writable,_ = pcall(function()
+			assert(not no_write_tests)
 			return Environment.Functions.sethiddenproperty(obj,prop, Environment.Functions.gethiddenproperty(obj,prop))
 		end)
 	end
