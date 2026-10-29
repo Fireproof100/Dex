@@ -960,46 +960,103 @@ module.New = function(Embedded,AppContainer)
 		table.clear(Properties.Attrib_List);
  
 	end
-	Properties.GetProperies_Sorted = function(obj)
-		
-		local currentTitle = ""
-		local sortedList = {}
-		local SuperClass = ""
-		for class_name, instance_data in Environment.API.Classes do
-			
-			if obj:IsA(class_name) == false then continue end
-			
-			for d, Property in instance_data.Properties do
-				local readable,writable = Functions.GetPropertyData(obj,Property["Name"])
-				if readable == false then continue end
-				
-				local AddToTable = true
-				if Property["Tags"] ~= nil then
-					for tag, v in Property["Tags"] do
-						if Environment.Settings.Properties.ShowDeprecated == false and tag == "Deprecated" and v == true then
-							AddToTable = false
-						end
-						if Environment.Settings.Properties.ShowHidden == false     and tag == "Hidden" and v == true then
-							AddToTable = false
-						end
-					end
-				end
-				if AddToTable == true then
-					local FoundCategory = false
-					for c, Category in sortedList do
-						if Category.Category == Property["Category"] then
-							table.insert(Category.props,Property["Name"])
-							FoundCategory = true
+	Properties.GetProperiesSorted = function(obj,source)
+		if source == "API" then
+
+			local currentTitle = ""
+			local sortedList = {}
+			local SuperClass = ""
+			for class_name, instance_data in Environment.API.Classes do
+
+				if obj:IsA(class_name) == false then continue end
+
+				for d, Property in instance_data.Properties do
+					local readable,writable = Functions.GetPropertyData(obj,Property["Name"])
+					if readable == false then continue end
+
+					local AddToTable = true
+					if Property["Tags"] ~= nil then
+						for tag, v in Property["Tags"] do
+							if Environment.Settings.Properties.ShowDeprecated == false and tag == "Deprecated" and v == true then
+								AddToTable = false
+							end
+							if Environment.Settings.Properties.ShowHidden == false     and tag == "Hidden" and v == true then
+								AddToTable = false
+							end
 						end
 					end
-					if FoundCategory == false then
-						table.insert(sortedList,{Category = Property["Category"],props = {Property["Name"]}})
+					if AddToTable == true then
+						local FoundCategory = false
+						for c, Category in sortedList do
+							if Category.Category == Property["Category"] then
+								table.insert(Category.props,Property["Name"])
+								FoundCategory = true
+							end
+						end
+						if FoundCategory == false then
+							table.insert(sortedList,{Category = Property["Category"],props = {Property["Name"]}})
+						end
 					end
 				end
 			end
+			return sortedList
+		else
+			local api_props = {}
+			for class_name, instance_data in Environment.API.Classes do
+				if obj:IsA(class_name) == false then continue end
+				for d, Property in instance_data.Properties do
+					api_props[Property.Name] = Property
+				end
+			end
+			local props = Environment.ReflectionService:GetPropertiesOfClass(obj.ClassName,{
+				Security = SecurityCapabilities.new(table.unpack(Enum.SecurityCapability:GetEnumItems())),
+				ExcludeInherited = false,
+				ExcludeDisplay = false,
+			})
+			local sortedList = {}
+			for _, prop in props do
+				local category = prop.Display.Category
+				local name = prop.Name
+				
+				local readable,writable = Functions.GetPropertyData(obj,name)
+				if readable == false then continue end
+				
+				local is_deprecated = prop.Display.DeprecationMessage
+				local is_hidden = false
+				if is_deprecated == "" or is_deprecated == nil then is_deprecated = true else is_deprecated = false end
+				local ap = api_props[name]
+				if ap then
+					if ap.Tags ~= nil then
+						if ap.Tags.Hidden then
+							is_hidden = ap.Tags.Hidden
+						end
+						if ap.Tags.Deprecated then
+							is_deprecated = ap.Tags.Deprecated
+						end
+					end
+				end
+				
+				if Environment.Settings.Properties.ShowDeprecated == false and is_deprecated then
+					continue
+				end
+				if Environment.Settings.Properties.ShowHidden == false and is_hidden then
+					continue
+				end
+				local found = false
+				for _, categories in sortedList do
+					if categories.Category == category then
+						table.insert(categories.props,name)
+						found = true
+					end
+				end
+				if found then
+					continue
+				end
+				table.insert(sortedList,{Category = category,props = {name}})
+			end
+			return sortedList
 		end
-
-		return sortedList
+		
 	end
 	Properties.ExpandableTypes = {
 		["Vector3int16"] = {"X","Y","Z","Magnitude"},
@@ -1506,7 +1563,7 @@ module.New = function(Embedded,AppContainer)
 		if obj == NilInstancesFolder then
 			return
 		end
-		for _, category in Properties.GetProperies_Sorted(obj) do
+		for _, category in Properties.GetProperiesSorted(obj,Environment.Settings.Properties.UseReflectionService and "Reflection" or "API") do
 			Properties.AddProperty({
 				Object = obj,
 				IsCategory = true,
