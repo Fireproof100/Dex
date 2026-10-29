@@ -489,6 +489,6 @@ module.NewSpy = function()
 	end
 	return RemoteSpy
 end
-
+module.Beta = true
 module.Init = module.NewSpy
 return module
