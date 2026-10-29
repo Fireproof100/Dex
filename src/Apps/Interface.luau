@@ -247,5 +247,6 @@ module.New = function()
 	
 	return Interface
 end
+module.Beta = true
 module.Init = module.New
 return module
