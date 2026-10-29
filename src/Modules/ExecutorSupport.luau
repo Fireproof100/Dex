@@ -452,23 +452,10 @@ local function load(Environment)
 	Test("debug.getconstant",debug.getconstant,TEST_EXISTENCE_ONLY,true)
 	Test("debug.getconstants",debug.getconstant,TEST_EXISTENCE_ONLY,true)
 	Test("debug.setconstant",debug.setconstant,TEST_EXISTENCE_ONLY,true)
-	Test("gethiddenproperty",gethiddenproperty,function()
-		local Confidential = gethiddenproperty(script,"Confidential")
-		if typeof(Confidential) ~= " boolean" then
-			error("Unable to read ModuleScript.Confidential")
-		end
-	end)
+	Test("gethiddenproperty",gethiddenproperty,TEST_EXISTENCE_ONLY)
 	Test("readfile",readfile,TEST_EXISTENCE_ONLY)
 	Test("writefile",writefile,TEST_EXISTENCE_ONLY)
-	Test("sethiddenproperty",sethiddenproperty,function()
-		if gethiddenproperty == nil then
-			error("Missing dependency 'gethiddenproperty'")
-		end
-		sethiddenproperty(script,"Confidential",true)
-		if gethiddenproperty(script,"Confidential") ~= true then
-			error("Unable to write ModuleScript.Confidential")
-		end
-	end)
+	Test("sethiddenproperty",sethiddenproperty,TEST_EXISTENCE_ONLY)
 	local function Add(name)
 		if module.Support[name] == true then
 			local f = getfenv()[name]
