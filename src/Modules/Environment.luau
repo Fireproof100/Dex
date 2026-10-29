@@ -41,6 +41,7 @@ module.DefaultSettings = {
 		ShowAttributes = true,
 		ShowTags = true,
 		MaxAttributes = 50,
+		UseReflectionService = true,
 		ScaleType = 1, -- 0 Full Name Shown, 1 Equal Halves
 	},
 	Window = {
@@ -790,7 +791,7 @@ module.CorePackages = module.cloneref(game:GetService("CorePackages")) or Instan
 module.TextService = module.cloneref(game:GetService("TextService"))
 module.MarketplaceService = module.cloneref(game:GetService("MarketplaceService"))
 module.ReplicatedStorage = module.cloneref(game:GetService("ReplicatedStorage"))
-
+module.ReflectionService = module.cloneref(game:GetService("ReflectionService"))
 -- Settings
 if module.Functions.Support.readfile and module.Functions.Support.writefile then
 	local content;
