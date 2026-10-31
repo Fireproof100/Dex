@@ -368,7 +368,24 @@ module.MakeNode = function(Properties,index)
 			return
 		end
 		
-		
+		local mouse : Mouse = Environment.mouse
+		local UIS : UserInputService = Environment.UIS
+		Connections[#Connections+1] = UIS.InputBegan:Connect(function(input,proc)
+			if input.UserInputType == Enum.UserInputType.MouseButton2 then
+				if Environment.CheckMouseInGui(new) then
+					Properties.RightClickContext:Clear()
+					Properties.RightClickContext.Add(Properties.RightClickContext,{
+						Name = "Copy Value",
+						Disabled = false,
+						OnClick = function()
+							Environment.Functions.setclipboard(Functions.Value_To_Luau(node.GetValue()))
+						end
+					})
+					Properties.RightClickContext:Show(new.AbsolutePosition.X,new.AbsolutePosition.Y)
+				end
+			end
+
+		end)
 		new.Visible = true
 		local value = node.GetValue()
 		local type_value = typeof(value)
@@ -743,15 +760,11 @@ module.MakeNode = function(Properties,index)
 				Properties.ArrowContext.Width = new.ValueFrame.AbsoluteSize.X
 				Properties.ArrowContext:Show(new.ValueFrame.AbsolutePosition.X,new.ValueFrame.AbsolutePosition.Y)
 				
-				
-				
-				
 			end)
 			
 		else
 			f1(nil)
 		end
-		
 		
 		
 	end
@@ -1745,11 +1758,18 @@ module.New = function(Embedded,AppContainer)
 	Properties.ArrowContext.SearchEnabled = false
 	Properties.ArrowContext.Iconless = true
 	
+
+	
 	Properties.AttributeContext = ContextMenu.new()
 	Properties.AttributeContext.SearchEnabled = false
 	Properties.AttributeContext.Iconless = true
 	Properties.AttributeContext.Clear(Properties.AttributeContext)
 	
+	Properties.RightClickContext = ContextMenu.new()
+	Properties.RightClickContext.SearchEnabled = false
+	Properties.RightClickContext.Iconless = true
+	Properties.RightClickContext.Clear(Properties.RightClickContext)
+
 	
 	local propertiesItems = create({
 		{ 1, "Folder", { Name = "PropertiesItems" } },
