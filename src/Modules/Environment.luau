@@ -12,7 +12,7 @@ function module_metatable.__index(t,k)
 end
 local module = setmetatable({},module_metatable)
 
-module.Version = "2.3.7"
+module.Version = "2.3.8"
 module.DefaultSettings = {
 	Explorer = {
 		_Recurse = true,
