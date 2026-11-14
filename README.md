@@ -41,4 +41,10 @@ API.Apps.Explorer.ViewObject(game.Players.LocalPlayer)
 - [ ] Binary SaveInstance Module 
 - [ ] 3D Model Viewer
 - [x] Settings
-- [x] Plugin API
+- [x] Plugin API. Example:
+```lua
+local API = nil
+if getgenv then API = getgenv().Dex end
+if not API then API = _G.Dex end
+API.Apps.Explorer.ViewObject(game.Players.LocalPlayer)
+```
