@@ -12,7 +12,7 @@ function module_metatable.__index(t,k)
 end
 local module = setmetatable({},module_metatable)
 
-module.Version = "2.3.8"
+module.Version = "2.4.0"
 module.DefaultSettings = {
 	Explorer = {
 		_Recurse = true,
@@ -127,6 +127,17 @@ end
 
 
 ---------------------
+module.GetUIScale = function(obj)
+	if not Obj then return 1 end
+	local Curr = Obj
+	while Curr do
+		local ScaleObj = Curr:FindFirstChildOfClass("UIScale")
+		if ScaleObj then return ScaleObj.Scale end
+		Curr = Curr.Parent
+	end
+	return 1
+
+end
 module.IsExecutor = function() 
 	return not module.IsStudio 
 end
@@ -780,6 +791,7 @@ module.service = setmetatable({},{__index = function(_,k)
 end,})
 module.HttpService = module.cloneref(game:GetService("HttpService"))
 module.TweenS = module.cloneref(game:GetService("TweenService"))
+module.TweenService = module.TweenS
 module.UIS = module.cloneref(game:GetService("UserInputService"))
 module.Players = module.cloneref(game:GetService("Players"))
 module.LocalPlayer = module.cloneref(module.Players.LocalPlayer)
@@ -792,6 +804,7 @@ module.TextService = module.cloneref(game:GetService("TextService"))
 module.MarketplaceService = module.cloneref(game:GetService("MarketplaceService"))
 module.ReplicatedStorage = module.cloneref(game:GetService("ReplicatedStorage"))
 module.ReflectionService = module.cloneref(game:GetService("ReflectionService"))
+module.ContextActionService = module.cloneref(game:GetService("ContextActionService"))
 -- Settings
 if module.Functions.Support.readfile and module.Functions.Support.writefile then
 	local content;
