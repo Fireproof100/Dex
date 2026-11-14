@@ -313,8 +313,8 @@ local s = {
 		end)
 		Environment.UsePluginAPI = LoadSettings.UsePluginAPI
 		local PluginAPI = require(script.Parent.Modules.PluginAPI)
-		if getgenv ~= nil then
-			getgenv().Dex = PluginAPI
+		if Environment.Functions.Support.getgenv then
+			Environment.Functions.getgenv().Dex = PluginAPI
 		else
 			_G.Dex = PluginAPI
 		end
