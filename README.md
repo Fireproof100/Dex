@@ -30,6 +30,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Fireproof100/Dex/refs
 - [ ] Script Viewer
    - [ ] Autofill
    - [ ] Info Bar
+   - [x] Shortcuts
    - [x] Execute Button
   - [x] Tabs
 - [x] Terminal Commands (plugin API is available as 'API' when executing a script in the console). Example:
