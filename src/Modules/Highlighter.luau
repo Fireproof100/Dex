@@ -3,7 +3,7 @@ local Environment = require(script.Parent.Environment)()
 local keywords = {
 	lua = {
 		"and", "break", "or", "else", "elseif", "if", "then", "until", "repeat", "while", "do", "for", "in", "end",
-		"local", "return", "function", "export"
+		"local", "return", "function", "export", "const",
 	},
 	rbx = {
 		"Workspace","game", "workspace", "script", "math", "string", "table", "task", "wait", "select", "next", "Enum",
@@ -77,7 +77,7 @@ function getHighlight(tokens, index)
 		return colors.lua
 	elseif exploitSet[token] then
 		return colors.exploit
-	elseif token:sub(1, 1) == "\"" or token:sub(1, 1) == "\'" then
+	elseif token:sub(1, 1) == "\"" or token:sub(1, 1) == "\'" or token:match("^%[=*%[") then
 		return colors.str
 	elseif token == "true" or token == "false" then
 		return colors.boolean
@@ -105,67 +105,113 @@ function highlighter.run(source)
 	local currentToken = ""
 
 	local inString = false
-	local inComment = false
-	local commentPersist = false
 
-	for i = 1, #source do
+	local i = 1
+	local len = #source
+
+	while i <= len do
 		local character = source:sub(i, i)
 
-		if inComment then
-			if character == "\n" and not commentPersist then
-				table.insert(tokens, currentToken)
-				table.insert(tokens, character)
-				currentToken = ""
-
-				inComment = false
-			elseif source:sub(i - 1, i) == "]]" and commentPersist then
-				currentToken ..= "]"
-
+		if inString then
+			if (character == inString and source:sub(i - 1, i - 1) ~= "\\") or character == "\n" then
+				currentToken = currentToken .. character
 				table.insert(tokens, currentToken)
 				currentToken = ""
-
-				inComment = false
-				commentPersist = false
-			else
-				currentToken = currentToken .. character
-			end
-		elseif inString then
-			if character == inString and source:sub(i-1, i-1) ~= "\\" or character == "\n" then
-				currentToken = currentToken .. character
 				inString = false
 			else
 				currentToken = currentToken .. character
 			end
+			i += 1
 		else
 			if source:sub(i, i + 1) == "--" then
-				table.insert(tokens, currentToken)
-				currentToken = "-"
-				inComment = true
-				commentPersist = source:sub(i + 2, i + 3) == "[["
+				if currentToken ~= "" then
+					table.insert(tokens, currentToken)
+					currentToken = ""
+				end
+
+				local _, openEnd, eq = source:find("^%[(=*)%[", i + 2)
+				if openEnd then
+					local closeDelim = "]" .. eq .. "]"
+					local _, closeEnd = source:find(closeDelim, openEnd + 1, true)
+					if closeEnd then
+						table.insert(tokens, source:sub(i, closeEnd))
+						i = closeEnd + 1
+					else
+						table.insert(tokens, source:sub(i))
+						break
+					end
+				else
+					local nlPos = source:find("\n", i + 2, true)
+					if nlPos then
+						table.insert(tokens, source:sub(i, nlPos - 1))
+						table.insert(tokens, "\n")
+						i = nlPos + 1
+					else
+						table.insert(tokens, source:sub(i))
+						break
+					end
+				end
+			elseif character == "[" then
+				local _, openEnd, eq = source:find("^%[(=*)%[", i)
+				if openEnd then
+					if currentToken ~= "" then
+						table.insert(tokens, currentToken)
+						currentToken = ""
+					end
+
+					local closeDelim = "]" .. eq .. "]"
+					local _, closeEnd = source:find(closeDelim, openEnd + 1, true)
+					if closeEnd then
+						table.insert(tokens, source:sub(i, closeEnd))
+						i = closeEnd + 1
+					else
+						table.insert(tokens, source:sub(i))
+						break
+					end
+				else
+					if currentToken ~= "" then
+						table.insert(tokens, currentToken)
+						currentToken = ""
+					end
+					table.insert(tokens, character)
+					i += 1
+				end
 			elseif character == "\"" or character == "\'" then
-				table.insert(tokens, currentToken)
+				if currentToken ~= "" then
+					table.insert(tokens, currentToken)
+				end
 				currentToken = character
 				inString = character
+				i += 1
 			elseif operatorsSet[character] then
-				table.insert(tokens, currentToken)
+				if currentToken ~= "" then
+					table.insert(tokens, currentToken)
+					currentToken = ""
+				end
 				table.insert(tokens, character)
-				currentToken = ""
+				i += 1
 			elseif character:match("[%w_]") then
 				currentToken = currentToken .. character
+				i += 1
 			else
-				table.insert(tokens, currentToken)
+				if currentToken ~= "" then
+					table.insert(tokens, currentToken)
+					currentToken = ""
+				end
 				table.insert(tokens, character)
-				currentToken = ""
+				i += 1
 			end
 		end
 	end
 
-	table.insert(tokens, currentToken)
+	if currentToken ~= "" then
+		table.insert(tokens, currentToken)
+	end
 
 	local highlighted = {}
 
-	for i, token in ipairs(tokens) do
-		local highlight = getHighlight(tokens, i)
+	for idx, token in ipairs(tokens) do
+		local highlight = getHighlight(tokens, idx)
 
 		if highlight then
 			local syntax = string.format("<font color = \"#%s\">%s</font>", highlight:ToHex(), token:gsub("<", "&lt;"):gsub(">", "&gt;"))
