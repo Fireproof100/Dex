@@ -2,6 +2,8 @@ local Environment = require(script.Parent.Parent.Parent.Modules.Environment)()
 
 local TweenService: TweenService, UserInputService: UserInputService = Environment.TweenS, Environment.UIS
 local ScrollBar = require(script.Parent.ScrollBar)
+local ContextActionService : ContextActionService = Environment.ContextActionService
+local TextService = Environment.TextService
 
 local funcs = {}
 
@@ -57,6 +59,7 @@ local keywords = {
 	["until"] = true,
 	["while"] = true,
 	["plugin"] = true,
+	["const"] = true,
 }
 
 local builtIns = {
@@ -197,36 +200,149 @@ local function setupEditBox(obj)
 	editBox.FocusLost:Connect(function()
 		obj:DisconnectEditBoxEvent()
 		obj.Editing = false
+		obj:ResetSelection()
 	end)
 
 	editBox:GetPropertyChangedSignal("Text"):Connect(function()
+		Environment.FastWait(0.03)
 		local text = editBox.Text
-		if #text == 0 or obj.EditBoxCopying then
+		if #text == 0 then
+			return
+		end
+		if obj.EditBoxCopying then
+			return
+		end
+		if obj.Undoing then
 			return
 		end
 		editBox.Text = ""
 		obj:AppendText(text)
 	end)
 end
-
 local function setupMouseSelection(obj)
 	local mouse = Environment.Players.LocalPlayer:GetMouse()
 	local codeFrame = obj.GuiElems.LinesFrame
-	local lines = obj.Lines
+
+	local lastClickTime = 0
+	local lastClickPos = Vector2.zero
+	local DOUBLE_CLICK_TIME = 0.3
+	local DOUBLE_CLICK_DIST = 8  
+
+	local function getTokenRange(line, col)
+		local len = #line
+		if len == 0 then
+			return 0, 0
+		end
+
+		local leftIdx = col
+		local rightIdx = col + 1
+
+		local leftChar = (leftIdx >= 1 and leftIdx <= len) and line:sub(leftIdx, leftIdx) or nil
+		local rightChar = (rightIdx >= 1 and rightIdx <= len) and line:sub(rightIdx, rightIdx) or nil
+		local targetIdx
+		if rightChar and rightChar:match("[%w_]") then
+			targetIdx = rightIdx
+		elseif leftChar and leftChar:match("[%w_]") then
+			targetIdx = leftIdx
+		elseif rightChar and not rightChar:match("%s") then
+			targetIdx = rightIdx
+		elseif leftChar and not leftChar:match("%s") then
+			targetIdx = leftIdx
+		else
+			targetIdx = (rightIdx <= len) and rightIdx or leftIdx
+		end
+
+		if not targetIdx or targetIdx < 1 or targetIdx > len then
+			return 0, 0
+		end
+
+		local char = line:sub(targetIdx, targetIdx)
+		local startIdx = targetIdx
+		local endIdx = targetIdx
+
+		if char:match("[%w_]") then
+			while startIdx > 1 and line:sub(startIdx - 1, startIdx - 1):match("[%w_]") do
+				startIdx = startIdx - 1
+			end
+			while endIdx < len and line:sub(endIdx + 1, endIdx + 1):match("[%w_]") do
+				endIdx = endIdx + 1
+			end
+		elseif char:match("%s") then
+			while startIdx > 1 and line:sub(startIdx - 1, startIdx - 1):match("%s") do
+				startIdx = startIdx - 1
+			end
+			while endIdx < len and line:sub(endIdx + 1, endIdx + 1):match("%s") do
+				endIdx = endIdx + 1
+			end
+		else
+			if not char:match("[%[%]%(%){}%'%\";,%`]") then
+				while startIdx > 1 and line:sub(startIdx - 1, startIdx - 1) == char do
+					startIdx = startIdx - 1
+				end
+				while endIdx < len and line:sub(endIdx + 1, endIdx + 1) == char do
+					endIdx = endIdx + 1
+				end
+			end
+		end
+		return startIdx - 1, endIdx
+	end
+
+	local function getNearestPos(relX, relY)
+		local lines = obj.Lines
+		local fontSizeX = obj:GetFontWidth()
+		local fontSizeY = obj.FontSize
+		local rawX = math.round(relX / fontSizeX) + obj.ViewX
+		local rawY = math.floor(relY / fontSizeY) + obj.ViewY
+
+		if #lines == 0 then
+			return 0, 0
+		end
+
+		if rawY >= #lines then
+			local lastY = #lines - 1
+			local lastLine = lines[lastY + 1] or ""
+			return #lastLine, lastY
+		elseif rawY < 0 then
+			return 0, 0
+		else
+			local line = lines[rawY + 1] or ""
+			local clampedX = math.clamp(rawX, 0, #line)
+			clampedX = math.clamp(clampedX + obj:TabAdjust(clampedX, rawY), 0, #line)
+			return clampedX, rawY
+		end
+	end
 
 	codeFrame.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			local fontSizeX, fontSizeY = math.ceil(obj.FontSize / 2), obj.FontSize
+			local mousePos = Vector2.new(mouse.X, mouse.Y)
+			local now = os.clock()
+			local isDoubleClick = (now - lastClickTime <= DOUBLE_CLICK_TIME)
+				and ((mousePos - lastClickPos).Magnitude <= DOUBLE_CLICK_DIST)
+
+			lastClickTime = now
+			lastClickPos = mousePos
 
 			local relX = mouse.X - codeFrame.AbsolutePosition.X
 			local relY = mouse.Y - codeFrame.AbsolutePosition.Y
-			local selX = math.round(relX / fontSizeX) + obj.ViewX
-			local selY = math.floor(relY / fontSizeY) + obj.ViewY
+			local selX, selY = getNearestPos(relX, relY)
+
+			if isDoubleClick then
+				lastClickTime = 0 
+				local line = obj.Lines[selY + 1] or ""
+				local tokenStartX, tokenEndX = getTokenRange(line, selX)
+
+				obj.SelectionRange = { { tokenStartX, selY }, { tokenEndX, selY } }
+				obj.CursorX = tokenEndX
+				obj.CursorY = selY
+				obj.FloatCursorX = tokenEndX
+				obj:UpdateCursor()
+				obj:Refresh()
+				obj:SetCopyableSelection()
+				return
+			end
+
 			local releaseEvent, mouseEvent, scrollEvent
 			local scrollPowerV, scrollPowerH = 0, 0
-			selY = math.min(#lines - 1, selY)
-			local relativeLine = lines[selY + 1] or ""
-			selX = math.min(#relativeLine, selX + obj:TabAdjust(selX, selY))
 
 			obj.SelectionRange = { { -1, -1 }, { -1, -1 } }
 			obj:MoveCursor(selX, selY)
@@ -235,12 +351,7 @@ local function setupMouseSelection(obj)
 			local function updateSelection()
 				local relX = mouse.X - codeFrame.AbsolutePosition.X
 				local relY = mouse.Y - codeFrame.AbsolutePosition.Y
-				local sel2X = math.max(0, math.round(relX / fontSizeX) + obj.ViewX)
-				local sel2Y = math.max(0, math.floor(relY / fontSizeY) + obj.ViewY)
-
-				sel2Y = math.min(#lines - 1, sel2Y)
-				local relativeLine = lines[sel2Y + 1] or ""
-				sel2X = math.min(#relativeLine, sel2X + obj:TabAdjust(sel2X, sel2Y))
+				local sel2X, sel2Y = getNearestPos(relX, relY)
 
 				if sel2Y < selY or (sel2Y == selY and sel2X < selX) then
 					obj.SelectionRange = { { sel2X, sel2Y }, { selX, selY } }
@@ -259,7 +370,6 @@ local function setupMouseSelection(obj)
 					mouseEvent:Disconnect()
 					scrollEvent:Disconnect()
 					obj:SetCopyableSelection()
-					--updateSelection()
 				end
 			end)
 
@@ -340,6 +450,7 @@ local function makeFrame(obj)
 	editBox.MultiLine = true
 	editBox.Visible = false
 	editBox.Parent = frame
+	editBox.ClearTextOnFocus = false
 
 	lineTweens.Invis = TweenService:Create(
 		cursor,
@@ -356,7 +467,7 @@ local function makeFrame(obj)
 	elems.LineNumbersLabel = lineNumbersLabel
 	elems.Cursor = cursor
 	elems.EditBox = editBox
-	elems.ScrollCorner = create({
+	elems.ScrollCorner = Environment.create({
 		{
 			1,
 			"Frame",
@@ -387,6 +498,22 @@ local function makeFrame(obj)
 	return frame
 end
 
+funcs.GetFontWidth = function(self)
+	if self._cachedFontWidth and self._cachedFontWidthSize == self.FontSize then
+		return self._cachedFontWidth
+	end
+	-- Measure a 50-character sample to get the exact subpixel width per character
+	local sampleSize = TextService:GetTextSize(
+		string.rep("M", 50),
+		self.FontSize,
+		Enum.Font.Code,
+		Vector2.new(100000, 10000)
+	)
+	local charWidth = sampleSize.X / 50
+	self._cachedFontWidth = charWidth
+	self._cachedFontWidthSize = self.FontSize
+	return charWidth
+end
 funcs.GetSelectionText = function(self)
 	if not self:IsValidRange() then
 		return ""
@@ -417,28 +544,37 @@ funcs.GetSelectionText = function(self)
 
 	return self:ConvertText(result, false)
 end
-
 funcs.SetCopyableSelection = function(self)
 	local text = self:GetSelectionText()
-	local editBox = self.GuiElems.EditBox
+	local editBox : TextBox = self.GuiElems.EditBox
 
 	self.EditBoxCopying = true
 	editBox.Text = text
 	editBox.SelectionStart = 1
 	editBox.CursorPosition = #editBox.Text + 1
+	editBox:CaptureFocus()
+	editBox.FocusLost:Once(function(_,inputobject)
+		if inputobject.KeyCode == Enum.KeyCode.Escape then
+			self:ResetSelection()
+			editBox.Text = ""
+			editBox:CaptureFocus()
+		end
+	end)
+	task.wait(0.25)
 	self.EditBoxCopying = false
 end
-
 funcs.ConnectEditBoxEvent = function(self)
 	if self.EditBoxEvent then
 		self.EditBoxEvent:Disconnect()
 	end
-
+	local editBox = self.GuiElems.EditBox
 	self.EditBoxEvent = UserInputService.InputBegan:Connect(function(input)
 		if input.UserInputType ~= Enum.UserInputType.Keyboard then
 			return
 		end
-
+		--if self.EditBoxCopying then
+		--	return
+		--end
 		local keycodes = Enum.KeyCode
 		local keycode = input.KeyCode
 
@@ -452,10 +588,10 @@ funcs.ConnectEditBoxEvent = function(self)
 				finished = true
 			end)
 			func()
-			Lib.FastWait(0.5)
+			Environment.FastWait(0.5)
 			while not finished do
 				func()
-				Lib.FastWait(0.03)
+				Environment.FastWait(0.03)
 			end
 		end
 
@@ -465,6 +601,7 @@ funcs.ConnectEditBoxEvent = function(self)
 				self.CursorY = self.CursorY + 1
 				self:UpdateCursor()
 				self:JumpToCursor()
+				self:ResetSelection()
 			end)
 		elseif keycode == keycodes.Up then
 			setupMove(keycodes.Up, function()
@@ -472,9 +609,20 @@ funcs.ConnectEditBoxEvent = function(self)
 				self.CursorY = self.CursorY - 1
 				self:UpdateCursor()
 				self:JumpToCursor()
+				self:ResetSelection()
 			end)
 		elseif keycode == keycodes.Left then
 			setupMove(keycodes.Left, function()
+				if self:IsValidRange() then
+					local startPos = self.SelectionRange[1]
+					self.CursorX = startPos[1]
+					self.CursorY = startPos[2]
+					self.FloatCursorX = self.CursorX
+					self:ResetSelection()
+					self:UpdateCursor()
+					self:JumpToCursor()
+					return
+				end
 				local line = self.Lines[self.CursorY + 1] or ""
 				self.CursorX = self.CursorX
 				- 1
@@ -487,9 +635,20 @@ funcs.ConnectEditBoxEvent = function(self)
 				self.FloatCursorX = self.CursorX
 				self:UpdateCursor()
 				self:JumpToCursor()
+				self:ResetSelection()
 			end)
 		elseif keycode == keycodes.Right then
 			setupMove(keycodes.Right, function()
+				if self:IsValidRange() then
+					local endPos = self.SelectionRange[2]
+					self.CursorX = endPos[1]
+					self.CursorY = endPos[2]
+					self.FloatCursorX = self.CursorX
+					self:ResetSelection()
+					self:UpdateCursor()
+					self:JumpToCursor()
+					return
+				end
 				local line = self.Lines[self.CursorY + 1] or ""
 				self.CursorX = self.CursorX
 					+ 1
@@ -501,10 +660,12 @@ funcs.ConnectEditBoxEvent = function(self)
 				self.FloatCursorX = self.CursorX
 				self:UpdateCursor()
 				self:JumpToCursor()
+				self:ResetSelection()
 			end)
 		elseif keycode == keycodes.Backspace then
 			setupMove(keycodes.Backspace, function()
 				local startRange, endRange
+				self:SaveSnapshot()
 				if self:IsValidRange() then
 					startRange = self.SelectionRange[1]
 					endRange = self.SelectionRange[2]
@@ -561,11 +722,36 @@ funcs.ConnectEditBoxEvent = function(self)
 				self:ResetSelection(true)
 				self:JumpToCursor()
 			end)
+		
 		elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
 			if keycode == keycodes.A then
 				self.SelectionRange = { { 0, 0 }, { #self.Lines[#self.Lines], #self.Lines - 1 } }
-				self:SetCopyableSelection()
 				self:Refresh()
+				self:SetCopyableSelection()
+			elseif keycode == keycodes.V then
+				Environment.FastWait(0.03)
+				self:ResetSelection()
+			elseif keycode == keycodes.Z then
+				self.Undoing = true
+				Environment.FastWait(0.1)
+				self.Undoing = false
+				if self.Old[#self.Old] == nil then
+					return
+				end
+				self.Lines = self.Old[#self.Old].Lines
+				self.CursorX = self.Old[#self.Old].CursorX
+				self.CursorY = self.Old[#self.Old].CursorY
+				table.remove(self.Old,#self.Old)
+				self:Refresh()
+			elseif keycode == keycodes.X then
+				if self:IsValidRange() then
+					Environment.FastWait(0.03)
+					self:SaveSnapshot()
+					self:DeleteRange(nil, false, true)
+					self.FloatCursorX = self.CursorX
+					self:ResetSelection()
+					self:JumpToCursor()
+				end
 			end
 		end
 	end)
@@ -633,10 +819,22 @@ funcs.DeleteRange = function(self, range, noprocess, updatemouse)
 		self:ProcessTextChange()
 	end
 end
-
+funcs.SaveSnapshot = function(self)
+	local lines, cursorX, cursorY = self.Lines, self.CursorX, self.CursorY
+	self.Old[#self.Old+1] = {
+		Lines = table.clone(lines),
+		CursorX = cursorX,
+		CursorY = cursorY,
+	}
+	if #self.Old > 20 then
+		table.remove(self.Old,1)
+	end
+end
 funcs.AppendText = function(self, text)
 	self:DeleteRange(nil, true, true)
 	local lines, cursorX, cursorY = self.Lines, self.CursorX, self.CursorY
+	self:SaveSnapshot()
+	
 	local line = lines[cursorY + 1]
 	local before = line:sub(1, cursorX)
 	local after = line:sub(cursorX + 1)
@@ -725,17 +923,24 @@ funcs.CursorAnim = function(self, on)
 
 	coroutine.wrap(function()
 		while self.Editable do
-			Lib.FastWait(0.5)
-			if self.LastAnimTime ~= animTime then
-				return
+			lineTweens.Invis:Cancel()
+			if self.Editing then
+				cursor.BackgroundTransparency = 0
+				Environment.FastWait(0.5)
+				if self.LastAnimTime ~= animTime then
+					return
+				end
+				lineTweens.Invis:Play()
+				Environment.FastWait(0.4)
+				if self.LastAnimTime ~= animTime then
+					return
+				end
+				lineTweens.Vis:Play()
+				Environment.FastWait(0.2)
+			else
+				cursor.BackgroundTransparency = 1
+				Environment.FastWait()
 			end
-			lineTweens.Invis:Play()
-			Lib.FastWait(0.4)
-			if self.LastAnimTime ~= animTime then
-				return
-			end
-			lineTweens.Vis:Play()
-			Lib.FastWait(0.2)
 		end
 	end)()
 end
@@ -754,43 +959,45 @@ end
 funcs.UpdateCursor = function(self, input)
 	local linesFrame = self.GuiElems.LinesFrame
 	local cursor = self.GuiElems.Cursor
+	local fontWidth = self:GetFontWidth()
 	local hSize = math.max(0, linesFrame.AbsoluteSize.X)
 	local vSize = math.max(0, linesFrame.AbsoluteSize.Y)
 	local maxLines = math.ceil(vSize / self.FontSize)
-	local maxCols = math.ceil(hSize / math.ceil(self.FontSize / 2))
+	local maxCols = math.ceil(hSize / fontWidth)
 	local viewX, viewY = self.ViewX, self.ViewY
 	local totalLinesStr = tostring(#self.Lines)
-	local fontWidth = math.ceil(self.FontSize / 2)
-	local linesOffset = #totalLinesStr * fontWidth + 4 * fontWidth
+	local linesOffset = math.round(#totalLinesStr * fontWidth + 4 * fontWidth)
 
 	if input then
 		linesFrame = self.GuiElems.LinesFrame
 		local frameX, frameY = linesFrame.AbsolutePosition.X, linesFrame.AbsolutePosition.Y
 		local mouseX, mouseY = input.Position.X, input.Position.Y
-		local fontSizeX, fontSizeY = math.ceil(self.FontSize / 2), self.FontSize
+		local fontSizeY = self.FontSize
 
-		self.CursorX = self.ViewX + math.round((mouseX - frameX) / fontSizeX)
+		self.CursorX = self.ViewX + math.round((mouseX - frameX) / fontWidth)
 		self.CursorY = self.ViewY + math.floor((mouseY - frameY) / fontSizeY)
 	end
 
 	local cursorX, cursorY = self.CursorX, self.CursorY
+	local lines = self.Lines
 
-	local line = self.Lines[cursorY + 1] or ""
-	if cursorX > #line then
-		cursorX = #line
-	elseif cursorX < 0 then
+	-- Boundary checks
+	if #lines == 0 then
 		cursorX = 0
-	end
-
-	if cursorY >= #self.Lines then
-		cursorY = math.max(0, #self.Lines - 1)
+		cursorY = 0
+	elseif cursorY >= #lines then
+		cursorY = #lines - 1
+		local line = lines[cursorY + 1] or ""
+		cursorX = #line
 	elseif cursorY < 0 then
 		cursorY = 0
+		cursorX = 0
+	else
+		local line = lines[cursorY + 1] or ""
+		cursorX = math.clamp(cursorX, 0, #line)
+		cursorX = math.clamp(cursorX + self:TabAdjust(cursorX, cursorY), 0, #line)
 	end
 
-	cursorX = cursorX + self:TabAdjust(cursorX, cursorY)
-
-	-- Update modified
 	self.CursorX = cursorX
 	self.CursorY = cursorY
 
@@ -801,7 +1008,7 @@ funcs.UpdateCursor = function(self, input)
 	if cursorVisible then
 		local offX = (cursorX - viewX)
 		local offY = (cursorY - viewY)
-		cursor.Position = UDim2.new(0, linesOffset + offX * math.ceil(self.FontSize / 2) - 1, 0, offY * self.FontSize)
+		cursor.Position = UDim2.new(0, math.round(linesOffset + offX * fontWidth) - 1, 0, offY * self.FontSize)
 		cursor.Size = UDim2.new(0, 1, 0, self.FontSize + 2)
 		cursor.Visible = true
 		self:CursorAnim(true)
@@ -1135,13 +1342,13 @@ funcs.Refresh = function(self)
 		local sel2Row, sel2Column = selPos2[2], selPos2[1]
 		local selRelaY = relaY - 1
 
+		local fontWidth = self:GetFontWidth()
 		if selRelaY >= selPos1[2] and selRelaY <= selPos2[2] then
-			local fontSizeX = math.ceil(self.FontSize / 2)
 			local posX = (selRelaY == selPos1[2] and selPos1[1] or 0) - viewX
 			local sizeX = (selRelaY == selPos2[2] and selPos2[1] - posX - viewX or maxCols + viewX)
 
-			lineFrame.SelectionHighlight.Position = UDim2.new(0, posX * fontSizeX, 0, 0)
-			lineFrame.SelectionHighlight.Size = UDim2.new(0, sizeX * fontSizeX, 1, 0)
+			lineFrame.SelectionHighlight.Position = UDim2.new(0, math.round(posX * fontWidth), 0, 0)
+			lineFrame.SelectionHighlight.Size = UDim2.new(0, math.round(sizeX * fontWidth), 1, 0)
 			lineFrame.SelectionHighlight.Visible = true
 		else
 			lineFrame.SelectionHighlight.Visible = false
@@ -1205,12 +1412,11 @@ funcs.Refresh = function(self)
 
 	self.Frame.LineNumbers.Text = lineNumberStr
 	self:UpdateCursor()
-
 end
 
 funcs.UpdateView = function(self)
 	local totalLinesStr = tostring(#self.Lines)
-	local fontWidth = math.ceil(self.FontSize / 2)
+	local fontWidth = self:GetFontWidth()
 	local linesOffset = #totalLinesStr * fontWidth + 4 * fontWidth
 
 	local linesFrame = self.Frame.Lines
@@ -1338,7 +1544,7 @@ local function new()
 	local scrollH = ScrollBar.new(true)
 	scrollH.Gui.Position = UDim2.new(0, 0, 1, -16)
 	local obj = setmetatable({
-		FontSize = 15,
+		FontSize = 14, -- dont make it odd
 		ViewX = 0,
 		ViewY = 0,
 		Colors = Environment.Settings.Theme.Syntax,
@@ -1347,11 +1553,13 @@ local function new()
 		LineFrames = {},
 		Editable = true,
 		Editing = false,
+		Undoing = false,
 		CursorX = 0,
 		CursorY = 0,
 		FloatCursorX = 0,
 		Text = "",
 		PreHighlights = {},
+		Old = {},
 		SelectionRange = { { -1, -1 }, { -1, -1 } },
 		NewLines = {},
 		FrameOffsets = Vector2.new(0, 0),
@@ -1359,7 +1567,7 @@ local function new()
 		ScrollV = scrollV,
 		ScrollH = scrollH,
 	}, mt)
-	--Enviorment.Settings.Theme.Syntax.Changed:Connect(function()
+	--Environment.Settings.Theme.Syntax.Changed:Connect(function()
 	--	obj:ApplyTheme()
 	--end)
 	scrollV.WheelIncrement = 3
